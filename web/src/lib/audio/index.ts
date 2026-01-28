@@ -1,0 +1,1 @@
+export { createAudioCapture, type AudioCapture } from "./capture";
