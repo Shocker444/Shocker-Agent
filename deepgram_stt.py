@@ -60,6 +60,7 @@ class DeepgramSTT:
             if self._ws and self._ws.close_code is None:
                 self._connection_signal.clear()
 
+                textchunk_buffer = []
                 try:
                     async for raw_message in self._ws:
                         try:
@@ -73,10 +74,16 @@ class DeepgramSTT:
                             elif message_type == "Results":
                                 transcript = message.get('channel', 0).get('alternatives', [{}])[0].get('transcript', '')
                                 turn_is_formatted = message.get("speech_final", False)
+                                is_final = message.get("is_final", False)
 
                                 if turn_is_formatted:
+                                    if textchunk_buffer:
+                                        full_sentence = "".join(textchunk_buffer) + transcript
+                                        textchunk_buffer = []
+                                        yield STTOutputEvent(text=full_sentence)
+                                elif is_final:
                                     if transcript:
-                                        yield STTOutputEvent(text=transcript)
+                                        textchunk_buffer.append(transcript)
                                 else:
                                     yield STTChunkEvent(text=transcript)
 
@@ -123,7 +130,9 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
-            "interim_results": "true",    # Set to "false" if you only want final sentences
+            "endpointing": "300",        # Auto-detect end of speech after 500ms of silence
+            "interim_results": "true",  
+              # Set to "false" if you only want final sentences
         }
         url = f"wss://api.deepgram.com/v1/listen?{urlencode(params)}"
         headers = {"Authorization": f"Token {self.api_key}"}

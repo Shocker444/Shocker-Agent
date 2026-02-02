@@ -111,6 +111,7 @@ export function createVoiceSession(): VoiceSession {
             console.log("WebSocket connected.");
 
             try {
+                
                 await audioCapture.start((chunk) => {
                     if (ws && ws.readyState == WebSocket.OPEN) {
                         ws.send(chunk);

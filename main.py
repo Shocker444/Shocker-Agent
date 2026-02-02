@@ -14,7 +14,7 @@ from langchain.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableGenerator
 from langgraph.checkpoint.memory import InMemorySaver
 from agent import agent
-from starlette.staticfiles import StaticFiles
+from misc.jd import Job_description
 
 from deepgram_stt import DeepgramSTT
 
@@ -60,10 +60,11 @@ async def _stt_stream(
         try:
             # Stream each audio chunk to deepgram as it arrives
             async for audio_chunk in audio_stream:
-                chunk_count += 1
-                #print(f"📤 Sending audio chunk #{chunk_count}: {len(audio_chunk)} bytes")  # ← ADD THIS
-                await stt.send_audio(audio_chunk)
-
+                if isinstance(audio_chunk, bytes):
+                    await stt.send_audio(audio_chunk)
+                elif isinstance(audio_chunk, str):
+                    # Handle the text signal
+                    pass
         finally:
             await asyncio.sleep(0.2)  # wait for any final events
             await stt.close()
@@ -88,6 +89,8 @@ async def _stt_stream(
 
         await stt.close()
 
+
+
 async def _agent_stream(
         event_stream: AsyncIterator[VoiceAgentEvent]
 ) -> AsyncIterator[VoiceAgentEvent]:
@@ -103,7 +106,7 @@ async def _agent_stream(
         if event.type == "stt_output":
 
             stream = agent.astream(
-                {"messages": [HumanMessage(content=event.text)]},
+                {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
                 {"configurable": {"thread_id": thread_id}},
                 stream_mode="messages"
             )
