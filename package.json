@@ -1,0 +1,13 @@
+{
+  "name": "root-orchestrator",
+  "version": "1.0.0",
+  "scripts": {
+    "dev:backend": "uvicorn main:app --reload --port 8000",
+    "dev:frontend": "npm run dev --prefix web",
+    "build": "npm run build --prefix web",
+    "start": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

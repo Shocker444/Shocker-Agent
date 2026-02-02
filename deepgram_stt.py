@@ -78,7 +78,7 @@ class DeepgramSTT:
 
                                 if turn_is_formatted:
                                     if textchunk_buffer:
-                                        full_sentence = "".join(textchunk_buffer) + transcript
+                                        full_sentence = "  ".join(textchunk_buffer) + transcript
                                         textchunk_buffer = []
                                         yield STTOutputEvent(text=full_sentence)
                                 elif is_final:
@@ -130,7 +130,6 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
-            "endpointing": "300",        # Auto-detect end of speech after 500ms of silence
             "interim_results": "true",  
               # Set to "false" if you only want final sentences
         }

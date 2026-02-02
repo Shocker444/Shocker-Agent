@@ -49,7 +49,7 @@ async def _stt_stream(
     ) -> AsyncIterator[VoiceAgentEvent]:
 
     stt = DeepgramSTT()
-    print("🎤 STT stream started")
+    print("STT stream started")
 
     async def send_audio():
         """
