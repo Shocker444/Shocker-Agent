@@ -8,7 +8,7 @@ import {
     logs
 } from "./stores";
 
-import { createAudioCapture } from "./audio";
+import { createAudioCapture, createAudioPlayback } from "./audio";
 import { get } from "svelte/store";
 
 export interface VoiceSession {
@@ -22,6 +22,8 @@ export function createVoiceSession(): VoiceSession {
 
 
     const audioCapture = createAudioCapture()
+    const audioPlayback = createAudioPlayback()
+
     function handleEvent(event: ServerEvent) {
         const turn = get(currentTurn);
         console.log("Handling event:", event.type);
@@ -71,6 +73,9 @@ export function createVoiceSession(): VoiceSession {
                 );
                 logs.log(`Tool call: ${event.tool_name}`);
                 break;
+
+            case "tts_chunk":
+                
         }
     }
 
