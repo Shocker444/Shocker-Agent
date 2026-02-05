@@ -17,7 +17,7 @@ export type ServerEvent =
     }
 
   | { type: "agent_end"; timestamp: number; text: string }
-  | { type: "tts_chunk"; audio: string; timestamp: number };
+  | { type: "tts_chunk"; audio_data: string; timestamp: number };
 
 // Session state
 export interface SessionState {

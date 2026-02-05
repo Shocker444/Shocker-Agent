@@ -80,7 +80,7 @@ export function createVoiceSession(): VoiceSession {
                     activities.add("agent", "Agent Response", currentTurnstate.response);
                 }
                 currentTurn.ttsChunk(event.timestamp)
-                audioPlayback.push(event.audio)
+                audioPlayback.push(event.audio_data)
 
                 if (ttsFinishTimeout) clearTimeout(ttsFinishTimeout);
                 ttsFinishTimeout = setTimeout(() => {

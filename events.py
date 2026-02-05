@@ -161,8 +161,7 @@ def event_to_dict(event: VoiceAgentEvent) -> dict:
     elif isinstance(event, TTSChunkEvent):
         return {
             "type": event.type,
-            "audio_data": base64.b64encode(event.audio_data).decode('utf-8'),
-            "is_final": event.is_final,
+            "audio_data": base64.b64encode(event.audio_data).decode('ascii'),
             "timestamp": event.timestamp
         }
     else:

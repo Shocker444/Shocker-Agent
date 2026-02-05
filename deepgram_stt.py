@@ -182,6 +182,7 @@ class DeepgramTTS:
 
             try:
                 async for raw_message in self._ws:
+                    print("received bytes")
                     if isinstance(raw_message, bytes):
                         yield TTSChunkEvent(audio_data=raw_message)
 
