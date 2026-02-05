@@ -75,7 +75,22 @@ export function createVoiceSession(): VoiceSession {
                 break;
 
             case "tts_chunk":
-                
+                const currentTurnstate = get(currentTurn)
+                if (!currentTurnstate.ttsStartTs && currentTurnstate.response) {
+                    activities.add("agent", "Agent Response", currentTurnstate.response);
+                }
+                currentTurn.ttsChunk(event.timestamp)
+                audioPlayback.push(event.audio)
+
+                if (ttsFinishTimeout) clearTimeout(ttsFinishTimeout);
+                ttsFinishTimeout = setTimeout(() => {
+                    const t = get(currentTurn);
+                    if (t.active && t.sttEndTs && t.ttsEndTs) {
+                        finishTurn();
+                    }
+                }, 300);
+                break;
+
         }
     }
 
@@ -164,6 +179,7 @@ export function createVoiceSession(): VoiceSession {
         }
 
         audioCapture.stop()
+        audioPlayback.stop()
 
         if (ws) {
             ws.close();
