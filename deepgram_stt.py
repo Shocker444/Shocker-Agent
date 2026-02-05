@@ -16,11 +16,12 @@ import json
 from typing import AsyncIterator, Optional
 from urllib.parse import urlencode
 
+import base64
 import websockets
 from websockets.client import WebSocketClientProtocol
 from settings import settings
 
-from events import STTChunkEvent, STTEvent, STTOutputEvent 
+from events import STTChunkEvent, STTEvent, STTOutputEvent, TTSChunkEvent
 
 
 class DeepgramSTT:
@@ -81,6 +82,10 @@ class DeepgramSTT:
                                         full_sentence = "  ".join(textchunk_buffer) + transcript
                                         textchunk_buffer = []
                                         yield STTOutputEvent(text=full_sentence)
+                                    elif transcript:
+                                        yield STTOutputEvent(text=transcript)
+                                    else:
+                                        pass    
                                 elif is_final:
                                     if transcript:
                                         textchunk_buffer.append(transcript)
@@ -121,7 +126,7 @@ class DeepgramSTT:
 
         # Create a new connection
         params = {
-            "model": "nova-2",            # The model to use (nova-2 is fastest/best)
+            "model": "nova-3",            # The model to use (nova-2 is fastest/best)
             "language": "en-US",          # Language code
             "encoding": "linear16",       # CRITICAL: Tells Deepgram this is raw 16-bit PCM
             "channels": 1,                # CRITICAL: Mono audio
@@ -130,6 +135,7 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
+            "endpointing": "100",
             "interim_results": "true",  
               # Set to "false" if you only want final sentences
         }
@@ -142,3 +148,95 @@ class DeepgramSTT:
 
         self._connection_signal.set()
         return self._ws
+    
+class DeepgramTTS:
+    """Deepgram TTS client for text to speech streaming"""
+
+    def __init__(self):
+        self.api_key = settings.DEEPGRAM_API_KEY
+        if not self.api_key:
+            raise ValueError("Deepgram API KEY not Found")
+        
+        self._ws: Optional[WebSocketClientProtocol] = None
+        self._connection_signal = asyncio.Event()
+        self._close_signal = asyncio.Event()
+
+    async def receive_events(self) -> AsyncIterator[bytes]:
+        while not self._close_signal.is_set():
+            _, pending = await asyncio.wait([
+                asyncio.create_task(self._close_signal.wait()),
+                asyncio.create_task(self._connection_signal.wait())
+            ],
+            
+            return_when=asyncio.FIRST_COMPLETED)
+
+            with contextlib.suppress(asyncio.CancelledError):
+                for task in pending:
+                    task.cancel()
+
+            if self._close_signal.is_set():
+                break
+
+            if self._ws and self._ws.close_code is None:
+                self._connection_signal.clear()
+
+            try:
+                async for raw_message in self._ws:
+                    if isinstance(raw_message, bytes):
+                        yield TTSChunkEvent(audio_data=raw_message)
+
+                    elif isinstance(raw_message, str):
+                        try:
+
+                            meta = json.loads(raw_message)
+                            logger.info(f"Deeggram audio metadata {meta}")
+                            if "error" in meta:
+                                logger.info(f"Deepgram TTS Error: {meta['error']}")
+
+                        except json.JSONDecodeError as e:
+                            pass
+                    
+
+            except websockets.exceptions.ConnectionClosed:
+                logger.info("Connection closed")
+
+            
+
+    async def send_text(self, text_output: str) -> None:
+        ws = await self._ensure_connection()
+        await ws.send(json.dumps({"type": "Speak",
+                                  "text": text_output}))
+
+    async def close(self) -> None:
+        if self._ws and self._ws.close_code is None:
+            await self._ws.close()
+
+        self._ws = None
+        self._close_signal.set()
+
+    async def _ensure_connection(self) -> WebSocketClientProtocol:
+        if self._close_signal.is_set():
+            raise RuntimeError("DeepgramSTT tried establishing a connection after it was closed")
+        
+        if self._ws and self._ws.close_code is None:
+            return self._ws
+        
+        params = {
+            "model":"aura-asteria-en",
+            "encoding":"linear16",
+            "sample_rate":"24000",
+        }
+
+        url = f"wss://api.deepgram.com/v1/speak?{urlencode(params)}"
+        headers = {"Authorization": f"Token {self.api_key}"}
+        self._ws = await websockets.connect(uri=url, additional_headers=headers)
+
+        self._connection_signal.set()
+        return self._ws
+
+
+
+
+
+
+    

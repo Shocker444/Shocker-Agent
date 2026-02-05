@@ -14,9 +14,10 @@ from langchain.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableGenerator
 from langgraph.checkpoint.memory import InMemorySaver
 from agent import agent
+from utils import merge_async_iters
 from misc.jd import Job_description
 
-from deepgram_stt import DeepgramSTT
+from deepgram_stt import DeepgramSTT, DeepgramTTS
 
 from events import (
     AgentChunkEvent,
@@ -102,6 +103,7 @@ async def _agent_stream(
     async for event in event_stream:
         yield event
 
+
         buffer = []
         if event.type == "stt_output":
 
@@ -111,7 +113,7 @@ async def _agent_stream(
                 stream_mode="messages"
             )
             async for message, metadata in stream:
-                logger.info(f"Agent Message: {message}")
+                # logger.info(f"Agent Message: {message}")
                 if isinstance(message, AIMessage):
                     yield AgentChunkEvent(
                         text=message.content
@@ -121,7 +123,43 @@ async def _agent_stream(
             if buffer: 
                 yield AgentEndEvent(text="".join(buffer))
 
-pipeline = (RunnableGenerator(_stt_stream) | RunnableGenerator(_agent_stream))
+
+async def _tts_stream(
+        event_stream: AsyncIterator[VoiceAgentEvent]
+) -> AsyncIterator[VoiceAgentEvent]:
+    
+    tts = DeepgramTTS()
+
+    async def process_upstream():
+
+        try:
+            async for event in event_stream:
+                yield event
+
+                if event.type == "agent_end":
+                    logger.info(f"{event.text}")
+                    await tts.send_text(event.text)
+                else:
+                    pass
+
+        finally:
+            await asyncio.sleep(0.2)
+            await tts.close()
+
+    
+
+    try:
+        async for events in merge_async_iters(process_upstream(), tts.receive_events()):
+            yield events
+
+    finally:
+        await tts.close()
+
+
+    
+
+
+pipeline = (RunnableGenerator(_stt_stream) | RunnableGenerator(_agent_stream) | RunnableGenerator(_tts_stream))
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -144,12 +182,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
     output_stream = pipeline.atransform(websocket_audio_stream())
-
+    print(output_stream)
 
     async for event in output_stream:
-        print(type(event))
         await websocket.send_json(event_to_dict(event))
-        logger.info(f"✅ Event sent successfully")
 
 
 # Mount static files (frontend)
