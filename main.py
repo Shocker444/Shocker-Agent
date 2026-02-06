@@ -15,7 +15,8 @@ from langchain_core.runnables import RunnableGenerator
 from langgraph.checkpoint.memory import InMemorySaver
 from agent import agent
 from utils import merge_async_iters
-from misc.jd import Job_description
+from misc.sample_jd import Job_description
+
 
 from deepgram_stt import DeepgramSTT, DeepgramTTS
 
@@ -139,12 +140,14 @@ async def _tts_stream(
                 if event.type == "agent_end":
                     logger.info(f"{event.text}")
                     await tts.send_text(event.text)
+
+                    await tts.flush()
                 else:
                     pass
 
-        finally:
-            await asyncio.sleep(0.2)
-            await tts.close()
+        except Exception as e:
+            logger.error(f"Error while processing text: {e}")
+            raise
 
     
 

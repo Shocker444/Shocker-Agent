@@ -135,7 +135,7 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
-            "endpointing": "100",
+            "endpointing": "500",
             "interim_results": "true",  
               # Set to "false" if you only want final sentences
         }
@@ -207,6 +207,10 @@ class DeepgramTTS:
         ws = await self._ensure_connection()
         await ws.send(json.dumps({"type": "Speak",
                                   "text": text_output}))
+        
+    async def flush(self) -> None:
+        ws = await self._ensure_connection()
+        await ws.send(json.dumps({"type": "Flush"}))
 
     async def close(self) -> None:
         if self._ws and self._ws.close_code is None:

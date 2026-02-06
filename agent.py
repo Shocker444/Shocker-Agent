@@ -9,7 +9,8 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
 
 from settings import settings
-from prompts import SYSTEM_PROMPT
+from prompts import SYSTEM_PROMPT, TEXT_TO_SPEECH_PROMPT
+
 
 model = init_chat_model(model=settings.LLM_MODEL_NAME, temperature=0, api_key=settings.OPENAI_API_KEY)
     
@@ -26,7 +27,8 @@ async def call_llm(state: AgentState):
         [
             SystemMessage(
                 content=SYSTEM_PROMPT.format(JOB_DESCRIPTION=state["job_description"],
-                                             RESUME_DATA="N/A")
+                                             RESUME_DATA="N/A",
+                                             tts_prompt=TEXT_TO_SPEECH_PROMPT)
             )
         ]
         + state["messages"]
