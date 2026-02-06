@@ -87,59 +87,54 @@
   });
 </script>
 
-<div class="mt-5 pt-5 border-t border-gray-700">
-  <!-- Header -->
-  <div class="flex items-center gap-2 mb-4">
-    <span class="text-xs">⏱</span>
-    <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Latency Waterfall</span>
-    <span class="ml-auto font-mono text-sm font-semibold text-cyan-400">{totalLatencyDisplay}</span>
+<div class="mt-5 pt-5 border-t border-zinc-800">
+  <div class="flex items-center gap-2 mb-4 text-cyan-400">
+    <span class="text-xs">⚡</span>
+    <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">System Latency</span>
+    <span class="ml-auto font-mono text-sm font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">{totalLatencyDisplay}</span>
   </div>
 
-  <!-- Waterfall Bars -->
-  <div class="mb-4">
+  <div class="mb-4 space-y-3">
     {#if bars}
       {#each [
-        { label: 'STT', bar: bars.stt, gradient: 'from-cyan-400 to-emerald-500' },
-        { label: 'Agent', bar: bars.agent, gradient: 'from-purple-500 to-violet-600' },
-        { label: 'TTS', bar: bars.tts, gradient: 'from-orange-500 to-orange-600' },
+        // STT: Neon Yellow (Input Energy)
+        { label: 'Input', bar: bars.stt, color: 'bg-yellow-400', shadow: 'shadow-[0_0_10px_rgba(250,204,21,0.6)]' },
+        // Agent: Electric Blue (Processing Core)
+        { label: 'Core', bar: bars.agent, color: 'bg-cyan-400', shadow: 'shadow-[0_0_10px_rgba(34,211,238,0.6)]' },
+        // TTS: Hot Pink/Purple (Output/Voice)
+        { label: 'Label', bar: bars.tts, color: 'bg-fuchsia-500', shadow: 'shadow-[0_0_10px_rgba(217,70,239,0.6)]' },
       ] as row}
-        <div class="flex items-center mb-2">
-          <div class="w-12 flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+        <div class="flex items-center group">
+          <div class="w-10 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-300 transition-colors">
             {row.label}
           </div>
-          <div class="flex-1 h-5 bg-[#252530] rounded relative overflow-hidden">
+          <div class="flex-1 h-3 bg-zinc-900/80 rounded-full relative overflow-hidden ring-1 ring-white/5">
             <div
-              class="absolute h-full rounded bg-gradient-to-r {row.gradient} min-w-0.5"
+              class="absolute h-full rounded-full {row.color} {row.shadow} transition-all duration-75 ease-linear min-w-[2px]"
               style="left: {row.bar.style.left}; width: {row.bar.style.width}; opacity: {row.bar.style.opacity}"
             ></div>
           </div>
-          <div class="w-14 flex-shrink-0 text-right font-mono text-[10px] text-gray-600 pl-2.5">
+          <div class="w-14 flex-shrink-0 text-right font-mono text-[10px] text-zinc-400 pl-2">
             {row.bar.duration}
           </div>
         </div>
       {/each}
     {:else}
-      <div class="text-center py-4 text-gray-600 text-xs">Latency data will appear here</div>
+      <div class="text-center py-4 text-zinc-700 text-xs font-mono">WAITING FOR INPUT...</div>
     {/if}
   </div>
 
-  <!-- Stats Row -->
-  <div class="flex justify-between gap-2 pt-3 border-t border-gray-700">
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-[9px] font-semibold uppercase tracking-wider text-gray-600">Turns</span>
-      <span class="font-mono text-sm text-gray-500">{$latencyStats.turns}</span>
+  <div class="grid grid-cols-4 gap-2 pt-3 border-t border-zinc-800">
+    {#each [
+        { label: 'Turns', value: $latencyStats.turns },
+        { label: 'Avg', value: $computedStats.avg ? formatDuration($computedStats.avg) : '—' },
+        { label: 'Min', value: $computedStats.min ? formatDuration($computedStats.min) : '—' },
+        { label: 'Max', value: $computedStats.max ? formatDuration($computedStats.max) : '—' }
+    ] as stat}
+    <div class="flex flex-col items-center p-1 rounded bg-zinc-900/50 border border-zinc-800">
+      <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-500">{stat.label}</span>
+      <span class="font-mono text-xs text-cyan-400/90">{stat.value}</span>
     </div>
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-[9px] font-semibold uppercase tracking-wider text-gray-600">Avg Total</span>
-      <span class="font-mono text-sm text-gray-500">{$computedStats.avg ? formatDuration($computedStats.avg) : '—'}</span>
-    </div>
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-[9px] font-semibold uppercase tracking-wider text-gray-600">Min</span>
-      <span class="font-mono text-sm text-gray-500">{$computedStats.min ? formatDuration($computedStats.min) : '—'}</span>
-    </div>
-    <div class="flex flex-col items-center gap-1">
-      <span class="text-[9px] font-semibold uppercase tracking-wider text-gray-600">Max</span>
-      <span class="font-mono text-sm text-gray-500">{$computedStats.max ? formatDuration($computedStats.max) : '—'}</span>
-    </div>
+    {/each}
   </div>
 </div>

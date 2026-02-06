@@ -1,14 +1,24 @@
 // Sample rate of audio from ElevenLabs (pcm_24000 format)
+import { writable, type Writable } from "svelte/store";
+
 const SAMPLE_RATE = 24000;
 
 export interface AudioPlayback {
   push: (pcmBase64: string) => void;
   stop: () => void;
   resetScheduling: () => void;
+  visualizerStore: Writable<{ ctx: AudioContext | null; node: GainNode | null }>;
 }
 
 export function createAudioPlayback(): AudioPlayback {
   let audioContext: AudioContext | null = null;
+  let masterGainNode: GainNode | null;
+
+  const visualizerStore = writable<{ ctx: AudioContext | null; node: GainNode | null }>({
+    ctx: null,
+    node: null
+  });
+
   let nextPlayTime = 0;
   let sourceQueue: AudioBufferSourceNode[] = [];
   let base64Queue: string[] = [];
@@ -17,7 +27,14 @@ export function createAudioPlayback(): AudioPlayback {
   function ensureContext(): AudioContext {
     if (!audioContext) {
       audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+
+      masterGainNode = audioContext.createGain();
+      masterGainNode.gain.value = 1.0;
+      masterGainNode.connect(audioContext.destination);
+
+      visualizerStore.set({ ctx: audioContext, node: masterGainNode });
     }
+
     if (audioContext.state === "suspended") {
       audioContext.resume();
     }
@@ -82,7 +99,14 @@ export function createAudioPlayback(): AudioPlayback {
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
-      source.connect(ctx.destination);
+
+      if (masterGainNode) {
+        source.connect(masterGainNode);
+      }
+
+      else {
+        source.connect(ctx.destination)
+      }
 
       sourceQueue.push(source);
 
@@ -121,9 +145,11 @@ export function createAudioPlayback(): AudioPlayback {
     nextPlayTime = 0;
   }
 
+  
   return {
     push,
     stop,
     resetScheduling,
+    visualizerStore
   };
 }

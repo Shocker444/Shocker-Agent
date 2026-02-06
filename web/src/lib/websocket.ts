@@ -9,11 +9,12 @@ import {
 } from "./stores";
 
 import { createAudioCapture, createAudioPlayback } from "./audio";
-import { get } from "svelte/store";
+import { get, type Writable } from "svelte/store";
 
 export interface VoiceSession {
     start: () => Promise<void>;
     stop: () => void;
+    visualizerStore: Writable<{ ctx: AudioContext | null; node: GainNode | null }>;
 }
 
 export function createVoiceSession(): VoiceSession {
@@ -131,7 +132,7 @@ export function createVoiceSession(): VoiceSession {
             console.log("WebSocket connected.");
 
             try {
-                
+
                 await audioCapture.start((chunk) => {
                     if (ws && ws.readyState == WebSocket.OPEN) {
                         ws.send(chunk);
@@ -190,6 +191,6 @@ export function createVoiceSession(): VoiceSession {
         session.reset();
     }
 
-    return { start, stop }
+    return { start, stop, visualizerStore: audioPlayback.visualizerStore }
 
 }
