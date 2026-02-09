@@ -13,14 +13,12 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
     PYSETUP_PATH="/opt/pysetup" 
 
-
-
 # Install system dependencies
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-        curl \
-        build-essential \
-        portaudio19-dev \
+    curl \
+    build-essential \
+    portaudio19-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
