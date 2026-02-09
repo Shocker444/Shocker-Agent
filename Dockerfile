@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=false \
     POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" 
+    WORKSPACE_ROOT=/app/
 
 # Install system dependencies
 RUN apt-get update \
@@ -22,26 +22,24 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Install Poetry using pip and clear cache
+RUN pip install --no-cache-dir "poetry==$POETRY_VERSION"
+RUN poetry config installer.max-workers 20
 
 # work directory
-WORKDIR $PYSETUP_PATH
+WORKDIR $WORKSPACE_ROOT
 
 # copy project requirement files
-COPY poetry.lock pyproject.toml ./
+COPY poetry.lock pyproject.toml $WORKSPACE_ROOT
 
-# install runtime deps
-RUN poetry install --only main --no-root
-
-# Set work directory
-WORKDIR /app
+# Install the dependencies and clear cache
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --no-interaction --no-cache && \
+    rm -rf ~/.cache/pypoetry/cache/ && \
+    rm -rf ~/.cache/pypoetry/artifacts/
 
 # Copy the rest of the application
-COPY . /app
-
-# Expose the port
-EXPOSE 8000
+COPY . $WORKSPACE_ROOT
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "main.py"]
