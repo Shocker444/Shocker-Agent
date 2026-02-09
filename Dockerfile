@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=false \
     POETRY_NO_INTERACTION=1 \
-    WORKSPACE_ROOT=/app/
+    WORKSPACE_ROOT=/app
 
 # Install system dependencies
 RUN apt-get update \
