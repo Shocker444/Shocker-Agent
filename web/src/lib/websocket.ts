@@ -117,7 +117,8 @@ export function createVoiceSession(): VoiceSession {
         session.setStatus("connecting");
 
         // connect websocket
-        ws = new WebSocket("ws://localhost:8000/ws");
+        const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
+        ws = new WebSocket(wsUrl);
 
         console.log("WebSocket connecting...", ws);
 
