@@ -50,11 +50,6 @@ export function createVoiceSession(): VoiceSession {
                 currentTurn.agentChunk(event.timestamp, event.text);
                 break;
 
-            case "agent_end":
-                currentTurn.agentEnd(event.timestamp, event.text);
-                activities.add("agent", "Agent Response", event.text);
-                break;
-
             case "tool_call":
                 activities.add(
                     "tool",

@@ -1,4 +1,5 @@
 from typing import TypedDict, Annotated
+from loguru import logger
 from langchain.chat_models import init_chat_model
 from langgraph.graph import add_messages
 from langchain.messages import (
@@ -12,7 +13,7 @@ from settings import settings
 from prompts import SYSTEM_PROMPT, TEXT_TO_SPEECH_PROMPT
 
 
-model = init_chat_model(model=settings.LLM_MODEL_NAME, temperature=0, api_key=settings.OPENAI_API_KEY)
+model = init_chat_model(model=settings.LLM_MODEL_NAME, model_provider="google_genai", temperature=0, api_key=settings.GEMINI_API_KEY)
     
 
 class AgentState(TypedDict):
@@ -33,7 +34,7 @@ async def call_llm(state: AgentState):
         ]
         + state["messages"]
     )
-    return {"messages": response.content}
+    return {"messages": response.content[0]['text']}
 
 
 graph_builder = StateGraph(AgentState)

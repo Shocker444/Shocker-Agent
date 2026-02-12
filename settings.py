@@ -13,13 +13,26 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+
+    ENVIRONMENT: str = Field(default="development", description="Environment to run the application in")
+
     # SPEECH-TO-TEXT SETTINGS
     DEEPGRAM_API_KEY: Optional[str] = Field(default=None, description="Deepgram API key for STT service")
 
 
     # LLM SETTINGS FOR AGENT
     OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API key for LLM access")
-    LLM_MODEL_NAME: str = Field(default="gpt-4.1", description="LLM model name to use")
+    GEMINI_API_KEY: Optional[str] = Field(default=None, description="Gemini API key for LLM access")
+    LLM_MODEL_NAME: str = Field(default="gemini-3-flash-preview", description="LLM model name to use")
+
+
+    @property
+    def is_development(self) -> bool:
+        return self.ENVIRONMENT == "development"
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT == "production"
 
 
 

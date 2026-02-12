@@ -17,6 +17,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from agent import agent
 from utils import merge_async_iters
 from misc.sample_jd import Job_description
+from settings import settings
 
 
 from deepgram_stt import DeepgramSTT, DeepgramTTS
@@ -105,25 +106,27 @@ async def _agent_stream(
     async for event in event_stream:
         yield event
 
-
-        buffer = []
         if event.type == "stt_output":
 
             stream = agent.astream(
                 {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
                 {"configurable": {"thread_id": thread_id}},
-                stream_mode="messages"
+                stream_mode="messages",
+                flush=True
             )
             async for message, metadata in stream:
                 # logger.info(f"Agent Message: {message}")
-                if isinstance(message, AIMessage):
-                    yield AgentChunkEvent(
-                        text=message.content
-                    )
-                    buffer.append(message.content)
-                
-            if buffer: 
-                yield AgentEndEvent(text="".join(buffer))
+                try:
+                    if isinstance(message, AIMessage):
+                        logger.info(f"Agent Response: {message.content[0]['text']}")
+                        yield AgentChunkEvent(
+                            text=message.content[0]['text']
+                        )
+                except IndexError:
+                    logger.error(f"IndexError: {message.content}")
+
+
+            yield AgentEndEvent(text="")
 
 
 async def _tts_stream(
@@ -135,14 +138,20 @@ async def _tts_stream(
     async def process_upstream():
 
         try:
+            buffer = []
             async for event in event_stream:
                 yield event
 
                 if event.type == "agent_end":
-                    logger.info(f"{event.text}")
-                    await tts.send_text(event.text)
+                    if buffer:
+                        await tts.send_text("\n".join(buffer) + event.text)
+                    else:
+                        await tts.send_text(event.text)
 
                     await tts.flush()
+
+                elif event.type == "agent_chunk":
+                    buffer.append(event.text)
                 else:
                     pass
 
@@ -201,4 +210,7 @@ else:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app",
+                host="0.0.0.0",
+                port=8000,
+                reload=settings.is_development)

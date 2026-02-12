@@ -135,7 +135,7 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
-            "endpointing": "500",
+            "endpointing": "300",
             "interim_results": "true",  
               # Set to "false" if you only want final sentences
         }
