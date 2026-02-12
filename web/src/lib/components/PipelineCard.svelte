@@ -1,22 +1,24 @@
 <script lang="ts">
-  import { currentTurn } from '../stores';
-  import Pipeline from './Pipeline.svelte';
-  import LatencyWaterfall from './LatencyWaterfall.svelte';
+  import { currentTurn } from "../stores";
+  import Pipeline from "./Pipeline.svelte";
+  import LatencyWaterfall from "./LatencyWaterfall.svelte";
 </script>
 
 <div
-  class="bg-[#1a1a20] text-gray-100 rounded-2xl p-6 mb-5 transition-opacity duration-300
-         {$currentTurn.active ? '' : 'opacity-50'}"
+  class="text-neutral-200 transition-opacity duration-300
+         {$currentTurn.active ? '' : 'opacity-60 grayscale-[0.5]'}"
 >
   <div class="flex items-center justify-between mb-4">
-    <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Pipeline</span>
+    <!-- Header title is handled by parent container now, so we can hide or change this -->
+    <div class="hidden"></div>
+
     <span
-      class="font-mono text-[11px] py-1 px-2 rounded
+      class="ml-auto font-mono text-[9px] uppercase tracking-widest py-1 px-2 rounded border
              {$currentTurn.active
-               ? 'text-cyan-400 bg-cyan-400/15'
-               : 'text-gray-600 bg-[#252530]'}"
+        ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+        : 'text-neutral-500 bg-neutral-900 border-neutral-800'}"
     >
-      {$currentTurn.active ? 'Turn Active' : 'Waiting...'}
+      {$currentTurn.active ? "● Processing Active" : "○ System Idle"}
     </span>
   </div>
 

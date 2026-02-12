@@ -53,10 +53,6 @@ function createTurnStore() {
       }));
     },
 
-    agentEnd(ts: number, response: string) {
-      update((t) => ({ ...t, agentEndTs: ts, response }));
-    },
-
     ttsStart(ts: number) {
       update((t) => ({ ...t, ttsStartTs: t.ttsStartTs ?? ts }));
     },

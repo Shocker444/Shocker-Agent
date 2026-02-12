@@ -1,21 +1,24 @@
 <script lang="ts">
-  import { logs } from '../stores';
-  import { formatTime } from '../utils';
+  import { logs } from "../stores";
+  import { formatTime } from "../utils";
 </script>
 
-<div class="bg-white rounded-2xl p-6 border border-gray-200">
-  <div class="flex items-center justify-between mb-4">
-    <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Console</span>
-  </div>
-
-  <div class="max-h-44 overflow-y-auto font-mono text-[11px] text-gray-600 leading-relaxed">
+<!-- Note: Container styling is now handled by the parent in App.svelte mostly, but we ensure internal styles are dark -->
+<div class="h-full bg-transparent overflow-hidden flex flex-col">
+  <div
+    class="flex-grow overflow-y-auto p-4 font-mono text-[10px] leading-relaxed space-y-1"
+  >
     {#if $logs.length === 0}
-      <div class="text-gray-400">Logs will appear here...</div>
+      <div class="text-neutral-700 italic">_awaiting_system_logs...</div>
     {:else}
       {#each $logs as entry (entry.id)}
-        <div class="py-0.5 border-b border-gray-100 last:border-b-0">
-          <span class="text-gray-400 mr-2">{formatTime(entry.timestamp)}</span>
-          {entry.message}
+        <div
+          class="flex gap-3 text-neutral-400 border-l-2 border-transparent hover:border-neutral-700 hover:bg-white/5 pl-2 -ml-2 transition-colors"
+        >
+          <span class="text-neutral-600 flex-shrink-0 w-14"
+            >{formatTime(entry.timestamp)}</span
+          >
+          <span class="break-all">{entry.message}</span>
         </div>
       {/each}
     {/if}
