@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # LLM SETTINGS FOR AGENT
     OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API key for LLM access")
     GEMINI_API_KEY: Optional[str] = Field(default=None, description="Gemini API key for LLM access")
-    LLM_MODEL_NAME: str = Field(default="gemini-3-flash-preview", description="LLM model name to use")
+    LLM_MODEL_NAME: str = Field(default="gpt-4.1", description="LLM model name to use")
 
 
     @property

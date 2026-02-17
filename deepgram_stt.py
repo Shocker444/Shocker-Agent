@@ -227,7 +227,7 @@ class DeepgramTTS:
             return self._ws
         
         params = {
-            "model":"aura-asteria-en",
+            "model":"aura-2-thalia-en",
             "encoding":"linear16",
             "sample_rate":"24000",
         }

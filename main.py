@@ -118,9 +118,9 @@ async def _agent_stream(
                 # logger.info(f"Agent Message: {message}")
                 try:
                     if isinstance(message, AIMessage):
-                        logger.info(f"Agent Response: {message.content[0]['text']}")
+                        logger.info(f"Agent Response: {message.content}")
                         yield AgentChunkEvent(
-                            text=message.content[0]['text']
+                            text=message.content
                         )
                 except IndexError:
                     logger.error(f"IndexError: {message.content}")
