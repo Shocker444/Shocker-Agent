@@ -149,9 +149,18 @@ async def _tts_stream(
                         await tts.send_text(event.text)
 
                     await tts.flush()
+                    buffer = []
 
                 elif event.type == "agent_chunk":
                     buffer.append(event.text)
+
+                elif event.type == "stt_output":
+                    # BARGE-IN: User is speaking, so we shut up.
+                    # 1. Tell Deepgram to stop producing audio.
+                    await tts.clear()
+                    # 2. Throw away any text we were about to speak.
+                    buffer = []
+                    
                 else:
                     pass
 

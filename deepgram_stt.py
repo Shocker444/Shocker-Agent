@@ -212,6 +212,14 @@ class DeepgramTTS:
         ws = await self._ensure_connection()
         await ws.send(json.dumps({"type": "Flush"}))
 
+    async def clear(self) -> None:
+        """
+        Clears the internal buffer of text that has not yet been spoken.
+        Useful for implementation of barge-in (interruption).
+        """
+        ws = await self._ensure_connection()
+        await ws.send(json.dumps({"type": "Clear"}))
+
     async def close(self) -> None:
         if self._ws and self._ws.close_code is None:
             await self._ws.close()
@@ -227,7 +235,7 @@ class DeepgramTTS:
             return self._ws
         
         params = {
-            "model":"aura-2-thalia-en",
+            "model":"aura-2-asteria-en",
             "encoding":"linear16",
             "sample_rate":"24000",
         }
