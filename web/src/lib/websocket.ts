@@ -35,6 +35,8 @@ export function createVoiceSession(): VoiceSession {
                     if (prevTurn.turnStartTs) {
                         waterfallData.set({ ...prevTurn });
                     }
+                    let new_turn = get(currentTurn)
+                    console.log("Turn started", new_turn);
                     currentTurn.startTurn(event.timestamp);
                 }
                 currentTurn.sttStart(event.timestamp);
@@ -72,6 +74,7 @@ export function createVoiceSession(): VoiceSession {
 
             case "tts_chunk":
                 const currentTurnstate = get(currentTurn)
+                // console.log("Current turn state:", currentTurnstate);
                 if (!currentTurnstate.ttsStartTs && currentTurnstate.response) {
                     activities.add("agent", "Agent Response", currentTurnstate.response);
                 }
@@ -125,7 +128,7 @@ export function createVoiceSession(): VoiceSession {
         ws.onopen = async () => {
             session.connect();
             logs.log("Session started.");
-            console.log("WebSocket connected.");
+            // console.log("WebSocket connected.");
 
             try {
 
@@ -138,7 +141,7 @@ export function createVoiceSession(): VoiceSession {
                 logs.log("Session started.");
 
             } catch (err) {
-                console.error(err);
+                // console.error(err);
                 logs.log(
                     `Error: ${err instanceof Error ? err.message : "Unknown error"}`
                 );
@@ -148,20 +151,20 @@ export function createVoiceSession(): VoiceSession {
         };
 
         ws.onmessage = async (event) => {
-            console.log("WebSocket message received:", event);
+            // console.log("WebSocket message received:", event);
             const eventData: ServerEvent = JSON.parse(event.data)
-            console.log("Parsed event data:", eventData);
+            // console.log("Parsed event data:", eventData);
             handleEvent(eventData);
         };
 
         ws.onclose = () => {
             session.disconnect();
             logs.log("WebSocket disconnected");
-            console.log("websocket closed");
+            // console.log("websocket closed");
         };
 
-        ws.onerror = (e) => {
-            console.error(e);
+        ws.onerror = () => {
+            // console.error(e);
             logs.log("WebSocket error");
             session.setStatus("error");
         };
@@ -181,7 +184,7 @@ export function createVoiceSession(): VoiceSession {
         if (ws) {
             ws.close();
             ws = null;
-            console.log("WebSocket closed");
+            // console.log("WebSocket closed");
         }
 
         session.reset();
