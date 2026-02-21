@@ -110,6 +110,14 @@
 # messages = [HumanMessage(content="Add 3 and 4.")]
 # for chunk in agent.stream(messages, stream_mode="messages"):
 #     print(chunk)
+voice_id = 'rrr'
+output_format = 3333
+model_id = 6666
+url = (
+        f"wss://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream-input"
+        f"?model_id={model_id}&output_format={output_format}"
+    )
+print(url)
 #     print("\n")
 class LRUCache:
 

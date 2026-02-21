@@ -20,7 +20,7 @@ from misc.sample_jd import Job_description
 from settings import settings
 
 
-from deepgram_stt import DeepgramSTT, DeepgramTTS
+from deepgram import DeepgramSTT, DeepgramTTS
 
 from events import (
     AgentChunkEvent,
