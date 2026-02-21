@@ -48,3 +48,4 @@ lerna-debug.log*
 
 # files
 new_test.py
+test.py
