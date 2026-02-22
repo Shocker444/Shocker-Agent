@@ -21,6 +21,7 @@ from settings import settings
 
 
 from deepgram import DeepgramSTT, DeepgramTTS
+from elevenlabs_tts import ElevenLabsTTS
 
 from events import (
     AgentChunkEvent,
@@ -133,7 +134,7 @@ async def _tts_stream(
         event_stream: AsyncIterator[VoiceAgentEvent]
 ) -> AsyncIterator[VoiceAgentEvent]:
     
-    tts = DeepgramTTS()
+    tts = ElevenLabsTTS()
 
     async def process_upstream():
 
@@ -148,18 +149,18 @@ async def _tts_stream(
                     else:
                         await tts.send_text(event.text)
 
-                    await tts.flush()
+                    #await tts.flush()
                     buffer = []
 
                 elif event.type == "agent_chunk":
                     buffer.append(event.text)
 
-                elif event.type == "stt_output":
-                    # BARGE-IN: User is speaking, so we shut up.
-                    # 1. Tell Deepgram to stop producing audio.
-                    await tts.clear()
-                    # 2. Throw away any text we were about to speak.
-                    buffer = []
+                # elif event.type == "stt_output":
+                #     # BARGE-IN: User is speaking, so we shut up.
+                #     # 1. Tell Deepgram to stop producing audio.
+                #     await tts.clear()
+                #     # 2. Throw away any text we were about to speak.
+                #     buffer = []
                     
                 else:
                     pass

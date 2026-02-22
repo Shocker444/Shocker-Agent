@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = Field(default=None, description="Gemini API key for LLM access")
     LLM_MODEL_NAME: str = Field(default="gpt-4.1", description="LLM model name to use")
 
+    # ELEVENLABS SETTINGS
+    ELEVENLABS_API_KEY: Optional[str] = Field(default=None, description="ElevenLabs API key for TTS service")
+
 
     @property
     def is_development(self) -> bool:

@@ -20,7 +20,9 @@ class ElevenLabsTTS:
                 stability = 0.5,
     ):
         self.voice_id = voice_id
-        self.ws: WebSocketClientProtocol = None
+        self.stability = stability
+        self.similarity_boost = 0.75
+        self._ws: Optional[WebSocketClientProtocol] = None
         self._connection_signal = asyncio.Event()
         self._close_signal = asyncio.Event()
 
@@ -31,7 +33,7 @@ class ElevenLabsTTS:
     async def receive_events(self) -> AsyncIterator[TTSChunkEvent]:
         while not self._close_signal.is_set():
             _, pending = await asyncio.wait([
-                asyncio.create_task(self.close_signal.wait()),
+                asyncio.create_task(self._close_signal.wait()),
                 asyncio.create_task(self._connection_signal.wait())
             ],
             
@@ -44,16 +46,20 @@ class ElevenLabsTTS:
             if self._close_signal.is_set():
                 break
 
-            if self.ws and self.ws.close_code is None:
+            if self._ws and self._ws.close_code is None:
                 self._connection_signal.clear()
-
+                
                 try:
-                    async for raw_message in self.ws:
+                    async for raw_message in self._ws:
                         if isinstance(raw_message, bytes):
-                            logger.info(f"ElevenLabs received bytes: {raw_message}")
+                            yield TTSChunkEvent(
+                                audio_data=raw_message,
+                                is_final=True
+                            )
 
                         else:
-                            logger.info(f"ElevenLabs received message: {raw_message}")
+                            message = json.loads(raw_message)
+                            logger.info(f"ElevenLabs received message: {message}")
 
                 except websockets.exceptions.ConnectionClosed:
                     logger.info("ElevenLabs: Websocket connection closed.")
@@ -62,8 +68,7 @@ class ElevenLabsTTS:
         ws = await self._ensure_connection()
 
         payload = {
-            "text": text,
-            "try_trigger_generation": self.trigger_generation,
+            "text": text_output,
             "flush": True
         }
 
@@ -80,28 +85,31 @@ class ElevenLabsTTS:
         if self._close_signal.is_set():
             raise RuntimeError("ElevenLabsTTS tried establishing a connection after it was closed")
 
-        if self.ws and self.ws.close_code is None:
-            return self.ws
+        if self._ws and self._ws.close_code is None:
+            return self._ws
 
         params = {
             "model":"eleven_multilingual_v2",
             "output_format": "pcm_24000",
-            "language": "en-US"
         }
 
-        url = f"wss://api/elevenlabs.io/text-to-speech/{self.voice_id}/stream_input?{urlencode(params)}"
+        url = (f"wss://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}/stream-input?"
+                f"model_id={params['model']}&"
+                f"output_format={params['output_format']}")
 
         bos_message = {
             "text": " ",
             "voice_settings": {
                 "stability": self.stability,
-                "similarity": self.similarity
+                "similarity_boost": self.similarity_boost
             },
             "xi_api_key": self.api_key
         }
 
+        self._ws = await websockets.connect(url)
+
         await self._ws.send(json.dumps(bos_message))
 
-        self._connection_signal.is_set()
+        self._connection_signal.set()
 
         return self._ws

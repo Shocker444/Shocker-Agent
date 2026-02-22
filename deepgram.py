@@ -66,7 +66,7 @@ class DeepgramSTT:
                     async for raw_message in self._ws:
                         try:
                             message = json.loads(raw_message)
-                            logger.info(f"Deepgram message received: {message}")  # Debug: print the full message
+
                             message_type = message.get('type')
                             
                             if message_type == "Metadata":
