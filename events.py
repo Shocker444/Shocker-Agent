@@ -106,8 +106,13 @@ class TTSChunkEvent:
     is_final: bool = False  # whether this is the final chunk
     timestamp: int = _now_ms()  # event timestamp in ms
 
+class InterruptEvent:
+    """Event representing an interrupt"""
+    type: Literal['interrupt'] = 'interrupt'
+    timestamp: int = _now_ms()  # event timestamp in ms
 
-VoiceAgentEvent = Union[UserSpeechEvent, STTEvent, AgentEvent, TTSChunkEvent]
+
+VoiceAgentEvent = Union[UserSpeechEvent, STTEvent, AgentEvent, TTSChunkEvent, InterruptEvent]
 
 def event_to_dict(event: VoiceAgentEvent) -> dict:
     """Convert a VoiceAgentEvent to a JSON-serializable dict"""
@@ -162,6 +167,11 @@ def event_to_dict(event: VoiceAgentEvent) -> dict:
         return {
             "type": event.type,
             "audio_data": base64.b64encode(event.audio_data).decode('ascii'),
+            "timestamp": event.timestamp
+        }
+    elif isinstance(event, InterruptEvent):
+        return {
+            "type": event.type,
             "timestamp": event.timestamp
         }
     else:

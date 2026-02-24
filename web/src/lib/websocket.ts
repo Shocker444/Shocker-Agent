@@ -52,6 +52,12 @@ export function createVoiceSession(): VoiceSession {
                 currentTurn.agentChunk(event.timestamp, event.text);
                 break;
 
+            case "agent_end":
+                const currentTurnstate = get(currentTurn)
+                currentTurn.agentEnd(event.timestamp);
+                activities.add("agent", "Agent Response", currentTurnstate.response);
+                break;
+
             case "tool_call":
                 activities.add(
                     "tool",
@@ -72,12 +78,13 @@ export function createVoiceSession(): VoiceSession {
                 logs.log(`Tool call: ${event.tool_name}`);
                 break;
 
+            case "interrupt":
+                currentTurn.interrupt(event.timestamp);
+                audioPlayback.stop()
+                break;
+
             case "tts_chunk":
-                const currentTurnstate = get(currentTurn)
                 // console.log("Current turn state:", currentTurnstate);
-                if (!currentTurnstate.ttsStartTs && currentTurnstate.response) {
-                    activities.add("agent", "Agent Response", currentTurnstate.response);
-                }
                 currentTurn.ttsChunk(event.timestamp)
                 audioPlayback.push(event.audio_data)
 

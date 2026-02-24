@@ -48,9 +48,12 @@ function createTurnStore() {
       update((t) => ({
         ...t,
         agentStartTs: t.agentStartTs ?? ts,
-        agentEndTs: ts,
         response: t.response + text,
       }));
+    },
+
+    agentEnd(ts: number) {
+      update((t) => ({ ...t, agentEndTs: ts }));
     },
 
     ttsStart(ts: number) {
@@ -63,6 +66,10 @@ function createTurnStore() {
         ttsStartTs: t.ttsStartTs ?? ts,
         ttsEndTs: ts,
       }));
+    },
+
+    interrupt(ts: number) {
+      update((t) => ({ ...t, ttsEndTs: ts }));
     },
 
     finishTurn() {

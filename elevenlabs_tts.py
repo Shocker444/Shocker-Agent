@@ -6,6 +6,7 @@ import json
 from urllib.parse import urlencode
 from loguru import logger
 
+import base64
 import websockets
 from websockets.client import WebSocketClientProtocol
 
@@ -59,7 +60,10 @@ class ElevenLabsTTS:
 
                         else:
                             message = json.loads(raw_message)
-                            logger.info(f"ElevenLabs received message: {message}")
+                            if "audio" in message and message["audio"]:
+                                yield TTSChunkEvent(
+                                    audio_data=base64.b64decode(message["audio"]),
+                                )
 
                 except websockets.exceptions.ConnectionClosed:
                     logger.info("ElevenLabs: Websocket connection closed.")
