@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
 
-  // Pass the raw audio buffer or connect to your audioPlayback store context
   export let audioContext: AudioContext | null = null;
   export let sourceNode: AudioNode | null = null;
 
@@ -10,14 +9,12 @@
   let analyser: AnalyserNode;
   let dataArray: Uint8Array<ArrayBuffer>;
 
-  // Initialize Audio Analyzer
   function setupAnalyzer() {
     if (!audioContext || !sourceNode) return;
-    // Clear any existing animation loop to prevent duplicates
     if (animationId) cancelAnimationFrame(animationId);
 
     analyser = audioContext.createAnalyser();
-    analyser.fftSize = 64; // Low number for chunkier "tech" look
+    analyser.fftSize = 64;
     sourceNode.connect(analyser);
 
     const bufferLength = analyser.frequencyBinCount;
@@ -38,58 +35,47 @@
     const height = canvas.height;
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = 30; // Radius of the inner core
+    const radius = 30;
 
-    // Clear with a fade effect for trails
-    ctx.fillStyle = "rgba(24, 24, 27, 0.2)"; // Zinc-950 with fade
+    ctx.fillStyle = "rgba(9, 9, 11, 0.25)"; // zinc-950 with fade
     ctx.fillRect(0, 0, width, height);
 
-    // 1. Draw Inner Glowing Core
+    // Inner Core
     const avgFreq = dataArray.reduce((a, b) => a + b) / dataArray.length;
-    const pulseSize = (avgFreq / 255) * 10; // Core pulses with volume
+    const pulseSize = (avgFreq / 255) * 10;
 
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius + pulseSize, 0, 2 * Math.PI);
-    ctx.fillStyle = "#06b6d4"; // Cyan-500
-    ctx.shadowBlur = 20 + pulseSize * 2;
-    ctx.shadowColor = "#06b6d4";
+    ctx.fillStyle = "#06b6d4";
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
     ctx.fill();
 
-    // 2. Draw Radiating Frequency Bars
-    const bars = 20; // Number of bars around the circle
+    // Frequency Bars
+    const bars = 20;
     const step = (Math.PI * 2) / bars;
 
     for (let i = 0; i < bars; i++) {
-      // Map frequency data to bars (mirroring half the data)
       const value = dataArray[i % dataArray.length];
-      const barHeight = (value / 255) * 40; // Max height 40px
-
-      // Calculate angle
+      const barHeight = (value / 255) * 40;
       const angle = i * step;
 
-      // Start point (on circle edge)
       const x1 = centerX + Math.cos(angle) * (radius + 5);
       const y1 = centerY + Math.sin(angle) * (radius + 5);
-
-      // End point (radiating out)
       const x2 = centerX + Math.cos(angle) * (radius + 5 + barHeight);
       const y2 = centerY + Math.sin(angle) * (radius + 5 + barHeight);
 
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
-
-      // Style: Electric Shocker Yellow/Blue gradient feel
-      ctx.strokeStyle = value > 150 ? "#facc15" : "#22d3ee"; // Yellow if loud, Cyan if quiet
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = value > 150 ? "#facc15" : "#22d3ee";
+      ctx.lineWidth = 3;
       ctx.lineCap = "round";
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = ctx.strokeStyle;
+      ctx.shadowBlur = 0;
       ctx.stroke();
     }
   }
 
-  // Reactive re-setup if props change, ensuring canvas is ready
   $: if (audioContext && sourceNode && canvas) setupAnalyzer();
 
   onDestroy(() => {
@@ -98,21 +84,14 @@
 </script>
 
 <div
-  class="relative w-full h-48 flex items-center justify-center bg-zinc-950 rounded-lg border border-zinc-800 overflow-hidden group"
+  class="relative w-full h-44 flex items-center justify-center bg-zinc-950 rounded-lg overflow-hidden"
 >
-  <div
-    class="absolute inset-0 opacity-10"
-    style="background-image: radial-gradient(#22d3ee 1px, transparent 1px); background-size: 20px 20px;"
-  ></div>
-
-  <canvas bind:this={canvas} width={300} height={200} class="relative z-10"
+  <canvas bind:this={canvas} width={300} height={180} class="relative z-10"
   ></canvas>
 
   {#if !sourceNode}
-    <div
-      class="absolute text-cyan-500/30 text-xs font-mono tracking-[0.2em] animate-pulse"
-    >
-      SYSTEM_IDLE
+    <div class="absolute text-zinc-700 text-[10px] font-mono tracking-[0.2em]">
+      IDLE
     </div>
   {/if}
 </div>

@@ -135,7 +135,6 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
-            "endpointing": "300",
             "interim_results": "true",  
               # Set to "false" if you only want final sentences
         }
@@ -234,7 +233,7 @@ class DeepgramTTS:
             return self._ws
         
         params = {
-            "model":"aura-2-asteria-en",
+            "model":"aura-2-hyperion-en",
             "encoding":"linear16",
             "sample_rate":"24000",
         }

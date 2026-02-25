@@ -108,8 +108,9 @@ async def _agent_stream(
     async for event in event_stream:
         yield event
 
+        
         if event.type == "stt_output":
-
+            buffer = []
             stream = agent.astream(
                 {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
                 {"configurable": {"thread_id": thread_id}},
@@ -124,47 +125,38 @@ async def _agent_stream(
                         yield AgentChunkEvent(
                             text=message.content
                         )
+                        buffer.append(message.content)
                 except IndexError:
                     logger.error(f"IndexError: {message.content}")
 
-
-            yield AgentEndEvent(text="")
+            if buffer:
+                yield AgentEndEvent(text="\n".join(buffer))
 
 
 async def _tts_stream(
         event_stream: AsyncIterator[VoiceAgentEvent]
 ) -> AsyncIterator[VoiceAgentEvent]:
     
-    tts = ElevenLabsTTS()
+    tts = DeepgramTTS()
 
     async def process_upstream():
 
         try:
-            buffer = []
             async for event in event_stream:
                 yield event
 
                 if event.type == "agent_end":
-                    if buffer:
-                        await tts.send_text("\n".join(buffer) + event.text)
-                    else:
-                        await tts.send_text(event.text)
-
-                    #await tts.flush()
-                    buffer = []
-
-                elif event.type == "agent_chunk":
-                    buffer.append(event.text)
+                    await tts.send_text(event.text)
+                    await tts.flush()
 
                 elif event.type == "stt_output":
                     # BARGE-IN: User is speaking, so we shut up.
                     # 1. Tell Deepgram to stop producing audio.
                     
                     # 2. Throw away any text we were about to speak.
-                    buffer = []
 
                     yield InterruptEvent()
-                    
+
                 else:
                     pass
 

@@ -8,35 +8,31 @@
 
   let { onStart, onStop }: Props = $props();
 
-  /* 
-       Updated status config for dark mode.
-       Using glows and brighter colors against dark background.
-    */
   const statusConfig = {
     ready: {
-      dot: "bg-cyan-500 shadow-[0_0_8px_theme(colors.cyan.500)]",
+      dot: "bg-cyan-500",
       text: "System Ready",
       textColor: "text-cyan-400",
     },
     connecting: {
-      dot: "bg-yellow-400 animate-pulse",
-      text: "Establishing Handshake...",
-      textColor: "text-yellow-400",
+      dot: "bg-amber-400 animate-pulse",
+      text: "Connecting...",
+      textColor: "text-amber-400",
     },
     listening: {
-      dot: "bg-red-500 shadow-[0_0_12px_theme(colors.red.500)] animate-pulse",
+      dot: "bg-red-500 animate-pulse",
       text: "Microphone Active",
       textColor: "text-red-400",
     },
     error: {
       dot: "bg-red-600",
-      text: "System Failure",
-      textColor: "text-red-500",
+      text: "System Error",
+      textColor: "text-red-400",
     },
     disconnected: {
-      dot: "bg-neutral-600",
+      dot: "bg-zinc-600",
       text: "Disconnected",
-      textColor: "text-neutral-500",
+      textColor: "text-zinc-500",
     },
   };
 
@@ -45,19 +41,18 @@
   );
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-3">
   <div class="flex gap-3">
     <button
       onclick={onStart}
       disabled={$session.connected}
-      class="flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wider bg-cyan-500 text-black rounded-lg
-             shadow-[0_0_15px_rgba(6,182,212,0.3)]
-             flex items-center justify-center gap-2 transition-all duration-200
-             hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] hover:-translate-y-0.5
-             disabled:opacity-20 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:translate-y-0 disabled:bg-neutral-800 disabled:text-neutral-500"
+      class="flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider bg-cyan-500 text-black rounded-lg
+             flex items-center justify-center gap-2 transition-all duration-150
+             hover:bg-cyan-400 hover:-translate-y-px
+             disabled:opacity-20 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:bg-zinc-700 disabled:text-zinc-500"
     >
       <svg
-        class="w-4 h-4"
+        class="w-3.5 h-3.5"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -74,35 +69,31 @@
     <button
       onclick={onStop}
       disabled={!$session.connected}
-      class="flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wider bg-neutral-800 text-neutral-400 rounded-lg
-             border border-neutral-700 transition-all duration-200
-             hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50
-             disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-neutral-800 disabled:hover:text-neutral-400 disabled:hover:border-neutral-700"
+      class="flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider bg-zinc-800 text-zinc-400 rounded-lg
+             border border-zinc-700 transition-all duration-150
+             hover:bg-red-950 hover:text-red-400 hover:border-red-900
+             disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-zinc-800 disabled:hover:text-zinc-400 disabled:hover:border-zinc-700"
     >
       Terminate
     </button>
   </div>
 
-  <!-- Status Indicator -->
+  <!-- Status Row -->
   <div
-    class="flex items-center justify-between py-2 px-3 bg-black/20 rounded-lg border border-neutral-800/50"
+    class="flex items-center justify-between py-2 px-3 bg-zinc-950 rounded-lg border border-zinc-800"
   >
-    <span class="text-[10px] font-mono text-neutral-600 uppercase">Status</span>
+    <span class="text-[10px] font-mono text-zinc-600 uppercase">Status</span>
     <div class="flex items-center gap-2">
-      <span
-        class="w-2 h-2 rounded-full transition-all duration-300 {config.dot}"
-      ></span>
-      <span class="text-xs font-mono font-bold {config.textColor}"
-        >{config.text}</span
-      >
+      <span class="w-1.5 h-1.5 rounded-full {config.dot}"></span>
+      <span class="text-xs font-mono {config.textColor}">{config.text}</span>
     </div>
   </div>
 
   {#if $session.connected}
     <div
-      class="py-2 px-3 bg-cyan-500/5 border border-cyan-500/10 rounded-lg text-[10px] text-cyan-400/80 text-center font-mono animate-pulse"
+      class="py-2 px-3 bg-zinc-800 border border-zinc-700 rounded-lg text-[10px] text-zinc-400 text-center font-mono"
     >
-      /// LISTENING FOR AUDIO INPUT ///
+      Listening for audio input
     </div>
   {/if}
 </div>

@@ -17,12 +17,13 @@ from events import TTSChunkEvent
 
 class ElevenLabsTTS:
     def __init__(self,
-                voice_id = "JBFqnCBsd6RMkjVDRZzb",
+                voice_id = "21m00Tcm4TlvDq8ikWAM",
                 stability = 0.5,
+                similarity_boost = 0.75,
     ):
         self.voice_id = voice_id
         self.stability = stability
-        self.similarity_boost = 0.75
+        self.similarity_boost = similarity_boost
         self._ws: Optional[WebSocketClientProtocol] = None
         self._connection_signal = asyncio.Event()
         self._close_signal = asyncio.Event()
@@ -52,6 +53,7 @@ class ElevenLabsTTS:
                 
                 try:
                     async for raw_message in self._ws:
+                        logger.info(f"ElevenLabs: Received raw message: {type(raw_message)} ---- {raw_message}")
                         if isinstance(raw_message, bytes):
                             yield TTSChunkEvent(
                                 audio_data=raw_message,
@@ -110,9 +112,17 @@ class ElevenLabsTTS:
             "xi_api_key": self.api_key
         }
 
-        self._ws = await websockets.connect(url)
-
-        await self._ws.send(json.dumps(bos_message))
+        try:
+            self._ws = await websockets.connect(url)
+        except Exception as e:
+            logger.error(f"ElevenLabs: Failed to connect to websocket: {e}")
+            raise
+        
+        try:
+            await self._ws.send(json.dumps(bos_message))
+        except Exception as e:
+            logger.error(f"ElevenLabs: Failed to send BOS message: {e}")
+            raise
 
         self._connection_signal.set()
 

@@ -5,20 +5,18 @@
 </script>
 
 <div
-  class="text-neutral-200 transition-opacity duration-300
-         {$currentTurn.active ? '' : 'opacity-60 grayscale-[0.5]'}"
+  class="text-zinc-200 transition-opacity duration-300 {$currentTurn.active
+    ? ''
+    : 'opacity-50'}"
 >
-  <div class="flex items-center justify-between mb-4">
-    <!-- Header title is handled by parent container now, so we can hide or change this -->
-    <div class="hidden"></div>
-
+  <div class="flex items-center justify-end mb-4">
     <span
-      class="ml-auto font-mono text-[9px] uppercase tracking-widest py-1 px-2 rounded border
+      class="font-mono text-[9px] uppercase tracking-widest py-1 px-2.5 rounded-full border
              {$currentTurn.active
-        ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-        : 'text-neutral-500 bg-neutral-900 border-neutral-800'}"
+        ? 'text-cyan-400 bg-cyan-950/50 border-cyan-800'
+        : 'text-zinc-600 bg-zinc-950 border-zinc-800'}"
     >
-      {$currentTurn.active ? "● Processing Active" : "○ System Idle"}
+      {$currentTurn.active ? "● Processing" : "○ Idle"}
     </span>
   </div>
 

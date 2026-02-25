@@ -10,6 +10,7 @@ const initialTurnState: TurnState = {
   agentEndTs: null,
   ttsStartTs: null,
   ttsEndTs: null,
+  interruptTs: null,
   transcript: "",
   response: "",
 };
@@ -44,16 +45,17 @@ function createTurnStore() {
       update((t) => ({ ...t, agentStartTs: t.agentStartTs ?? ts }));
     },
 
-    agentChunk(ts: number, text: string) {
+    agentChunk(ts: number) {
       update((t) => ({
         ...t,
         agentStartTs: t.agentStartTs ?? ts,
-        response: t.response + text,
       }));
     },
 
-    agentEnd(ts: number) {
-      update((t) => ({ ...t, agentEndTs: ts }));
+    agentEnd(ts: number, response: string) {
+      update((t) => ({ 
+        ...t, agentEndTs: ts,
+        response: response }));
     },
 
     ttsStart(ts: number) {
@@ -69,7 +71,7 @@ function createTurnStore() {
     },
 
     interrupt(ts: number) {
-      update((t) => ({ ...t, ttsEndTs: ts }));
+      update((t) => ({ ...t, interruptTs: ts }));
     },
 
     finishTurn() {

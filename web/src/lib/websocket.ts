@@ -49,13 +49,12 @@ export function createVoiceSession(): VoiceSession {
                 break;
 
             case "agent_chunk":
-                currentTurn.agentChunk(event.timestamp, event.text);
+                currentTurn.agentChunk(event.timestamp);
                 break;
 
             case "agent_end":
-                const currentTurnstate = get(currentTurn)
-                currentTurn.agentEnd(event.timestamp);
-                activities.add("agent", "Agent Response", currentTurnstate.response);
+                currentTurn.agentEnd(event.timestamp, event.text);
+                activities.add("agent", "Agent Response", event.text);
                 break;
 
             case "tool_call":
@@ -80,7 +79,10 @@ export function createVoiceSession(): VoiceSession {
 
             case "interrupt":
                 currentTurn.interrupt(event.timestamp);
-                audioPlayback.stop()
+                const t = get(currentTurn);
+                if (t.interruptTs && t.ttsStartTs) {
+                    audioPlayback.stop();
+                }
                 break;
 
             case "tts_chunk":

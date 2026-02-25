@@ -39,6 +39,7 @@ export interface TurnState {
   agentEndTs: number | null;
   ttsStartTs: number | null;
   ttsEndTs: number | null;
+  interruptTs: number | null;
   transcript: string;
   response: string;
 }
