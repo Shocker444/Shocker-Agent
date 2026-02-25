@@ -130,7 +130,7 @@ async def _agent_stream(
                     logger.error(f"IndexError: {message.content}")
 
             if buffer:
-                yield AgentEndEvent(text="\n".join(buffer))
+                yield AgentEndEvent(text=" ".join(buffer))
 
 
 async def _tts_stream(
@@ -154,6 +154,7 @@ async def _tts_stream(
                     # 1. Tell Deepgram to stop producing audio.
                     
                     # 2. Throw away any text we were about to speak.
+                    await tts.clear()
 
                     yield InterruptEvent()
 
