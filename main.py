@@ -130,7 +130,7 @@ async def _agent_stream(
                     logger.error(f"IndexError: {message.content}")
 
             if buffer:
-                yield AgentEndEvent(text=" ".join(buffer))
+                yield AgentEndEvent(text="".join(buffer))
 
 
 async def _tts_stream(
