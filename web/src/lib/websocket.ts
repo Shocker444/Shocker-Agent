@@ -47,6 +47,10 @@ export function createVoiceSession(): VoiceSession {
                 currentTurn.sttEnd(event.timestamp, event.text);
                 activities.add("stt", "Transcription", event.text);
                 break;
+            
+            case "agent_trigger":
+                currentTurn.agentTrigger(event.timestamp);
+                break;
 
             case "agent_chunk":
                 currentTurn.agentChunk(event.timestamp);

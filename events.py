@@ -47,6 +47,13 @@ class STTOutputEvent:
 STTEvent = Union[STTChunkEvent, STTOutputEvent]
 
 @dataclass
+class AgentTriggerEvent:
+    """Event indicating the agent has started its response generation"""
+    text: str
+    type: Literal['agent_trigger'] = 'agent_trigger'
+    timestamp: int = _now_ms()  # event timestamp in ms
+
+@dataclass
 class AgentChunkEvent:
     """
     Event emitted during agent response generation for streaming text chunks.
@@ -65,8 +72,8 @@ class AgentChunkEvent:
 @dataclass
 class AgentEndEvent:
     """Event indicating the agent has completed its response generation"""
+    text: str  # optional final text (can be empty)
     type: Literal['agent_end'] = 'agent_end'
-    text: str = ""  # optional final text (can be empty)
     timestamp: int = _now_ms()  # event timestamp in ms
 
 
@@ -95,7 +102,7 @@ class ToolReturnEvent:
 
 
 # union of all agent events
-AgentEvent = Union[AgentChunkEvent, AgentEndEvent, ToolCallEvent, ToolReturnEvent]
+AgentEvent = Union[AgentTriggerEvent, AgentChunkEvent, AgentEndEvent, ToolCallEvent, ToolReturnEvent]
 
 
 @dataclass
@@ -130,6 +137,12 @@ def event_to_dict(event: VoiceAgentEvent) -> dict:
             "timestamp": event.timestamp
         }
     elif isinstance(event, STTOutputEvent):
+        return {
+            "type": event.type,
+            "text": event.text,
+            "timestamp": event.timestamp
+        }
+    elif isinstance(event, AgentTriggerEvent):
         return {
             "type": event.type,
             "text": event.text,

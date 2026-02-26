@@ -24,6 +24,7 @@ from deepgram import DeepgramSTT, DeepgramTTS
 from elevenlabs_tts import ElevenLabsTTS
 
 from events import (
+    AgentTriggerEvent,
     AgentChunkEvent,
     AgentEndEvent,
     ToolCallEvent,
@@ -48,6 +49,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 async def _stt_stream(
@@ -81,10 +83,11 @@ async def _stt_stream(
     #print(f"🚀 Background audio task created: {send_task}")
 
     try:
-        event_count = 0
+        if settings.AGENT_TRIGGER:
+            yield AgentTriggerEvent(text="START")
+            settings.AGENT_TRIGGER = False  # Set to False so barge-in works for the rest of the session
+
         async for event in stt.receive_events():
-            #print(f"📥 Received STT event #{event_count}: {type(event).__name__}")  # ← ADD THIS
-            #print(f"   Event details: {event}") 
             yield event
     
     finally:
@@ -109,7 +112,7 @@ async def _agent_stream(
         yield event
 
         
-        if event.type == "stt_output":
+        if event.type == "stt_output" or event.type == "agent_trigger":
             buffer = []
             stream = agent.astream(
                 {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
@@ -154,9 +157,10 @@ async def _tts_stream(
                     # 1. Tell Deepgram to stop producing audio.
                     
                     # 2. Throw away any text we were about to speak.
-                    await tts.clear()
+                    if not settings.AGENT_TRIGGER:
+                        await tts.clear()
 
-                    yield InterruptEvent()
+                        yield InterruptEvent()
 
                 else:
                     pass
@@ -203,9 +207,12 @@ async def websocket_endpoint(websocket: WebSocket):
     output_stream = pipeline.atransform(websocket_audio_stream())
     print(output_stream)
 
-    async for event in output_stream:
-        await websocket.send_json(event_to_dict(event))
-
+    try:
+        async for event in output_stream:
+            await websocket.send_json(event_to_dict(event))
+    finally:
+        # Reset the trigger flag after the session is closed
+        settings.AGENT_TRIGGER = True
 
 # Mount static files (frontend)
 '''if STATIC_DIR.exists():

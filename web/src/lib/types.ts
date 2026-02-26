@@ -2,6 +2,7 @@
 export type ServerEvent =
   | { type: "stt_chunk"; timestamp: number; text: string }
   | { type: "stt_output"; timestamp: number; text: string }
+  | { type: "agent_trigger"; timestamp: number; text: string}
   | { type: "agent_chunk"; timestamp: number; text: string }
   | {
       type: "tool_call";
@@ -35,6 +36,7 @@ export interface TurnState {
   turnStartTs: number | null;
   sttStartTs: number | null;
   sttEndTs: number | null;
+  agentTriggerTs: number | null;
   agentStartTs: number | null;
   agentEndTs: number | null;
   ttsStartTs: number | null;

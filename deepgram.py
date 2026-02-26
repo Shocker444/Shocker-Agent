@@ -126,7 +126,7 @@ class DeepgramSTT:
 
         # Create a new connection
         params = {
-            "model": "nova-3",            # The model to use (nova-2 is fastest/best)
+            "model": "nova-2",            # The model to use (nova-2 is fastest/best)
             "language": "en-US",          # Language code
             "encoding": "linear16",       # CRITICAL: Tells Deepgram this is raw 16-bit PCM
             "channels": 1,                # CRITICAL: Mono audio
@@ -135,6 +135,7 @@ class DeepgramSTT:
             # Formatting options
             "smart_format": "true",       # Adds punctuation and capitalization
             "format_turns": str(self.format_turns).lower(),
+            "endpointing": "200",
             "interim_results": "true",  
               # Set to "false" if you only want final sentences
         }
@@ -233,7 +234,7 @@ class DeepgramTTS:
             return self._ws
         
         params = {
-            "model":"aura-2-hyperion-en",
+            "model":"aura-2-callista-en",
             "encoding":"linear16",
             "sample_rate":"24000",
         }
@@ -249,5 +250,3 @@ class DeepgramTTS:
 
 
 
-
-    

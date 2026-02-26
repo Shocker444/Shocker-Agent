@@ -6,6 +6,7 @@ const initialTurnState: TurnState = {
   turnStartTs: null,
   sttStartTs: null,
   sttEndTs: null,
+  agentTriggerTs: null,
   agentStartTs: null,
   agentEndTs: null,
   ttsStartTs: null,
@@ -39,6 +40,10 @@ function createTurnStore() {
 
     sttChunk(transcript: string) {
       update((t) => ({ ...t, transcript }));
+    },
+
+    agentTrigger(ts: number) {
+      update((t) => ({ ...t, agentTriggerTs: ts}));
     },
 
     agentStart(ts: number) {

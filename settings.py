@@ -13,6 +13,8 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    AGENT_TRIGGER: bool = Field(default=True, description="Agent First communication")
+
 
     ENVIRONMENT: str = Field(default="development", description="Environment to run the application in")
 
