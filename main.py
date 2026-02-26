@@ -52,137 +52,143 @@ app.add_middleware(
 
 
 
-async def _stt_stream(
-        audio_stream: AsyncIterator[bytes],
-    ) -> AsyncIterator[VoiceAgentEvent]:
+class VoicePipeline:
+    def __init__(self):
+        # Keeps track of whether this specific session has triggered the agent yet.
+        # This prevents global state mutations that affect concurrent users.
+        self.has_triggered = False
 
-    stt = DeepgramSTT()
-    print("STT stream started")
+    async def _stt_stream(
+            self,
+            audio_stream: AsyncIterator[bytes],
+        ) -> AsyncIterator[VoiceAgentEvent]:
 
-    async def send_audio():
-        """
-        Background task that pumps audio chunks to Deepgram 
-        """
-        chunk_count = 0
+        stt = DeepgramSTT()
+        print("STT stream started")
+
+        async def send_audio():
+            """
+            Background task that pumps audio chunks to Deepgram 
+            """
+            chunk_count = 0
+
+            try:
+                # Stream each audio chunk to deepgram as it arrives
+                async for audio_chunk in audio_stream:
+                    if isinstance(audio_chunk, bytes):
+                        await stt.send_audio(audio_chunk)
+                    elif isinstance(audio_chunk, str):
+                        # Handle the text signal
+                        pass
+            finally:
+                await asyncio.sleep(0.2)  # wait for any final events
+                await stt.close()
+
+        # launch the audio task in the background
+
+        send_task = asyncio.create_task(send_audio())
+        #print(f"🚀 Background audio task created: {send_task}")
 
         try:
-            # Stream each audio chunk to deepgram as it arrives
-            async for audio_chunk in audio_stream:
-                if isinstance(audio_chunk, bytes):
-                    await stt.send_audio(audio_chunk)
-                elif isinstance(audio_chunk, str):
-                    # Handle the text signal
-                    pass
+            if settings.AGENT_TRIGGER and not self.has_triggered:
+                yield AgentTriggerEvent(text="START")
+                self.has_triggered = True
+
+            async for event in stt.receive_events():
+                yield event
+        
         finally:
-            await asyncio.sleep(0.2)  # wait for any final events
+
+            with contextlib.suppress(asyncio.CancelledError):
+                send_task.cancel()
+                await send_task
+
             await stt.close()
 
-    # launch the audio task in the background
 
-    send_task = asyncio.create_task(send_audio())
-    #print(f"🚀 Background audio task created: {send_task}")
 
-    try:
-        if settings.AGENT_TRIGGER:
-            yield AgentTriggerEvent(text="START")
-            settings.AGENT_TRIGGER = False  # Set to False so barge-in works for the rest of the session
+    async def _agent_stream(
+            self,
+            event_stream: AsyncIterator[VoiceAgentEvent]
+    ) -> AsyncIterator[VoiceAgentEvent]:
+        '''
+        Processes STT events through the agent and yields VoiceAgentEvents
+        '''
 
-        async for event in stt.receive_events():
+        thread_id = str(uuid4())  # unique ID for this conversation thread
+        async for event in event_stream:
             yield event
-    
-    finally:
 
-        with contextlib.suppress(asyncio.CancelledError):
-            send_task.cancel()
-            await send_task
+            
+            if event.type == "stt_output" or event.type == "agent_trigger":
+                buffer = []
+                stream = agent.astream(
+                    {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
+                    {"configurable": {"thread_id": thread_id}},
+                    stream_mode="messages",
+                    flush=True
+                )
+                async for message, metadata in stream:
+                    # logger.info(f"Agent Message: {message}")
+                    try:
+                        if isinstance(message, AIMessage):
+                            logger.info(f"Agent Response: {message.content}")
+                            yield AgentChunkEvent(
+                                text=message.content
+                            )
+                            buffer.append(message.content)
+                    except IndexError:
+                        logger.error(f"IndexError: {message.content}")
 
-        await stt.close()
+                if buffer:
+                    yield AgentEndEvent(text="".join(buffer))
 
 
+    async def _tts_stream(
+            self,
+            event_stream: AsyncIterator[VoiceAgentEvent]
+    ) -> AsyncIterator[VoiceAgentEvent]:
+        
+        tts = DeepgramTTS()
 
-async def _agent_stream(
-        event_stream: AsyncIterator[VoiceAgentEvent]
-) -> AsyncIterator[VoiceAgentEvent]:
-    '''
-    Processes STT events through the agent and yields VoiceAgentEvents
-    '''
+        async def process_upstream():
 
-    thread_id = str(uuid4())  # unique ID for this conversation thread
-    async for event in event_stream:
-        yield event
+            try:
+                async for event in event_stream:
+                    yield event
+
+                    if event.type == "agent_end":
+                        await tts.send_text(event.text)
+                        await tts.flush()
+
+                    elif event.type == "stt_output":
+                        # BARGE-IN: User is speaking, so we shut up.
+                        # 1. Tell Deepgram to stop producing audio.
+                        
+                        # 2. Throw away any text we were about to speak.
+                        if not settings.AGENT_TRIGGER or self.has_triggered:
+                            await tts.clear()
+
+                            yield InterruptEvent()
+
+                    else:
+                        pass
+
+            except Exception as e:
+                logger.error(f"Error while processing text: {e}")
+                raise
 
         
-        if event.type == "stt_output" or event.type == "agent_trigger":
-            buffer = []
-            stream = agent.astream(
-                {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
-                {"configurable": {"thread_id": thread_id}},
-                stream_mode="messages",
-                flush=True
-            )
-            async for message, metadata in stream:
-                # logger.info(f"Agent Message: {message}")
-                try:
-                    if isinstance(message, AIMessage):
-                        logger.info(f"Agent Response: {message.content}")
-                        yield AgentChunkEvent(
-                            text=message.content
-                        )
-                        buffer.append(message.content)
-                except IndexError:
-                    logger.error(f"IndexError: {message.content}")
-
-            if buffer:
-                yield AgentEndEvent(text="".join(buffer))
-
-
-async def _tts_stream(
-        event_stream: AsyncIterator[VoiceAgentEvent]
-) -> AsyncIterator[VoiceAgentEvent]:
-    
-    tts = DeepgramTTS()
-
-    async def process_upstream():
 
         try:
-            async for event in event_stream:
-                yield event
+            async for events in merge_async_iters(process_upstream(), tts.receive_events()):
+                yield events
 
-                if event.type == "agent_end":
-                    await tts.send_text(event.text)
-                    await tts.flush()
+        finally:
+            await tts.close()
 
-                elif event.type == "stt_output":
-                    # BARGE-IN: User is speaking, so we shut up.
-                    # 1. Tell Deepgram to stop producing audio.
-                    
-                    # 2. Throw away any text we were about to speak.
-                    if not settings.AGENT_TRIGGER:
-                        await tts.clear()
-
-                        yield InterruptEvent()
-
-                else:
-                    pass
-
-        except Exception as e:
-            logger.error(f"Error while processing text: {e}")
-            raise
-
-    
-
-    try:
-        async for events in merge_async_iters(process_upstream(), tts.receive_events()):
-            yield events
-
-    finally:
-        await tts.close()
-
-
-    
-
-
-pipeline = (RunnableGenerator(_stt_stream) | RunnableGenerator(_agent_stream) | RunnableGenerator(_tts_stream))
+    def get_runnable(self):
+        return (RunnableGenerator(self._stt_stream) | RunnableGenerator(self._agent_stream) | RunnableGenerator(self._tts_stream))
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -204,15 +210,16 @@ async def websocket_endpoint(websocket: WebSocket):
                 break
 
 
-    output_stream = pipeline.atransform(websocket_audio_stream())
+    voice_pipeline = VoicePipeline()
+    output_stream = voice_pipeline.get_runnable().atransform(websocket_audio_stream())
     print(output_stream)
 
     try:
         async for event in output_stream:
             await websocket.send_json(event_to_dict(event))
     finally:
-        # Reset the trigger flag after the session is closed
-        settings.AGENT_TRIGGER = True
+        pass
+
 
 # Mount static files (frontend)
 '''if STATIC_DIR.exists():
