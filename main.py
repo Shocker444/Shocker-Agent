@@ -220,15 +220,6 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         pass
 
-
-# Mount static files (frontend)
-'''if STATIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
-else:
-    print(f"⚠️  Warning: Static directory not found at {STATIC_DIR}")
-    print("Frontend will not be served. Build it with: npm run build")'''
-
-
 if __name__ == "__main__":
     uvicorn.run("main:app",
                 host="0.0.0.0",
