@@ -5,7 +5,8 @@ import {
     latencyStats,
     waterfallData,
     activities,
-    logs
+    logs,
+    jobDescStore
 } from "./stores";
 
 import { createAudioCapture, createAudioPlayback } from "./audio";
@@ -139,20 +140,31 @@ export function createVoiceSession(): VoiceSession {
         console.log(ws.binaryType)
 
         ws.onopen = async () => {
-            session.connect();
-            logs.log("Session started.");
-            // console.log("WebSocket connected.");
-
+            
             try {
+                const jobDesc = get(jobDescStore);
+                if (jobDesc.description && ws && ws.readyState == WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: "job_desc", job_description: jobDesc }));
+                }
 
-                await audioCapture.start((chunk) => {
-                    if (ws && ws.readyState == WebSocket.OPEN) {
-                        ws.send(chunk);
-                    }
-                });
-                logs.log("Audio capture started.");
+                session.connect();
                 logs.log("Session started.");
-
+                // console.log("WebSocket connected.");
+                try{
+                    await audioCapture.start((chunk) => {
+                        if (ws && ws.readyState == WebSocket.OPEN) {
+                            ws.send(chunk);
+                        }
+                    });
+                    logs.log("Audio capture started.");
+                } catch (err) {
+                    // console.error(err);
+                    logs.log(
+                        `Error: ${err instanceof Error ? err.message : "Unknown error"}`
+                    );
+                    session.setStatus("error");
+                    stop();
+                }
             } catch (err) {
                 // console.error(err);
                 logs.log(

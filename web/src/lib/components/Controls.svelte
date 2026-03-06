@@ -1,5 +1,15 @@
 <script lang="ts">
-  import { session } from "../stores";
+  import { session, jobDescStore } from "../stores";
+
+  let errorMsg = $state("");
+
+  function handleJdChange(e: Event) {
+    const target = e.target as HTMLTextAreaElement;
+    jobDescStore.setJobDesc(target.value);
+    if (target.value.trim()) {
+      errorMsg = "";
+    }
+  }
 
   interface Props {
     onStart: () => void;
@@ -7,6 +17,15 @@
   }
 
   let { onStart, onStop }: Props = $props();
+
+  function handleInitialize() {
+    if (!$jobDescStore.description.trim()) {
+      errorMsg = "Please insert a job description before starting.";
+      return;
+    }
+    errorMsg = "";
+    onStart();
+  }
 
   const statusConfig = {
     ready: {
@@ -42,9 +61,29 @@
 </script>
 
 <div class="flex flex-col gap-3">
+  <!-- Job Description Input -->
+  <div class="flex flex-col gap-2">
+    <label for="jd-input" class="text-[10px] font-mono text-zinc-600 uppercase"
+      >Target Job Description</label
+    >
+    <textarea
+      id="jd-input"
+      class="w-full h-24 p-2 bg-zinc-900 border {errorMsg
+        ? 'border-red-500'
+        : 'border-zinc-800'} rounded-lg text-xs text-zinc-300 resize-none focus:outline-none focus:border-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-zinc-600 font-mono"
+      placeholder="Paste the job description here..."
+      value={$jobDescStore.description}
+      oninput={handleJdChange}
+      disabled={$session.connected}
+    ></textarea>
+    {#if errorMsg}
+      <span class="text-[10px] text-red-400 font-mono">{errorMsg}</span>
+    {/if}
+  </div>
+
   <div class="flex gap-3">
     <button
-      onclick={onStart}
+      onclick={handleInitialize}
       disabled={$session.connected}
       class="flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider bg-cyan-500 text-black rounded-lg
              flex items-center justify-center gap-2 transition-all duration-150

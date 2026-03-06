@@ -71,3 +71,9 @@ export interface LogEntry {
   message: string;
   timestamp: Date;
 }
+
+export interface JobDesc {
+  id: string;
+  title: string;
+  description: string;
+}

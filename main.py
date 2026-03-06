@@ -16,7 +16,7 @@ from langchain_core.runnables import RunnableGenerator
 from langgraph.checkpoint.memory import InMemorySaver
 from agent import agent
 from utils import merge_async_iters
-from misc.sample_jd import Job_description
+#from misc.sample_jd import Job_description
 from settings import settings
 
 
@@ -53,10 +53,11 @@ app.add_middleware(
 
 
 class VoicePipeline:
-    def __init__(self):
+    def __init__(self, job_description):
         # Keeps track of whether this specific session has triggered the agent yet.
         # This prevents global state mutations that affect concurrent users.
         self.has_triggered = False
+        self.job_description = job_description
 
     async def _stt_stream(
             self,
@@ -123,7 +124,7 @@ class VoicePipeline:
             if event.type == "stt_output" or event.type == "agent_trigger":
                 buffer = []
                 stream = agent.astream(
-                    {"messages": [HumanMessage(content=event.text)], "job_description": Job_description},
+                    {"messages": [HumanMessage(content=event.text)], "job_description": self.job_description},
                     {"configurable": {"thread_id": thread_id}},
                     stream_mode="messages",
                     flush=True
@@ -209,10 +210,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 logger.error(f"Unexpected error receiving audio: {e}")
                 break
 
-
-    voice_pipeline = VoicePipeline()
+    data = await websocket.receive_json()
+    voice_pipeline = VoicePipeline(data.get("job_description", ""))
     output_stream = voice_pipeline.get_runnable().atransform(websocket_audio_stream())
-    print(output_stream)
 
     try:
         async for event in output_stream:
