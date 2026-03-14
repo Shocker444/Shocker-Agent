@@ -27,6 +27,8 @@ export interface SessionState {
   recording: boolean;
   status: "ready" | "connecting" | "listening" | "error" | "disconnected";
   startTime: number | null;
+  duration: number | null;
+  remainingTime: number | null;
   elapsed: number;
 }
 

@@ -2,6 +2,8 @@
   import { session, jobDescStore } from "../stores";
 
   let errorMsg = $state("");
+  let durationValue = $state(10);
+  let durationError = $state("");
 
   function handleJdChange(e: Event) {
     const target = e.target as HTMLTextAreaElement;
@@ -12,7 +14,7 @@
   }
 
   interface Props {
-    onStart: () => void;
+    onStart: (duration: number) => void;
     onStop: () => void;
   }
 
@@ -23,8 +25,13 @@
       errorMsg = "Please insert a job description before starting.";
       return;
     }
+
+    if (durationValue < 5) {
+      durationError = "Duration cannot be less than 5 minutes.";
+      return;
+    }
     errorMsg = "";
-    onStart();
+    onStart(durationValue);
   }
 
   const statusConfig = {
@@ -61,6 +68,26 @@
 </script>
 
 <div class="flex flex-col gap-3">
+  <!-- Duration Input -->
+  <div class="flex flex-col gap-2">
+    <label for="duration-input" class="text-[10px] font-mono text-zinc-600 uppercase"
+      >Session Duration (Minutes)</label
+    >
+    <input
+      type="number"
+      id="duration-input"
+      class="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+      placeholder="e.g., 10"
+      bind:value={durationValue}
+      min="5"
+      max="60"
+      disabled={$session.connected}
+    />
+    {#if durationValue}
+      <span class="text-[10px] text-red-400 font-mono">{durationError}</span>
+    {/if}
+  </div>
+
   <!-- Job Description Input -->
   <div class="flex flex-col gap-2">
     <label for="jd-input" class="text-[10px] font-mono text-zinc-600 uppercase"
@@ -80,6 +107,7 @@
       <span class="text-[10px] text-red-400 font-mono">{errorMsg}</span>
     {/if}
   </div>
+
 
   <div class="flex gap-3">
     <button

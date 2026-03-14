@@ -53,11 +53,13 @@ app.add_middleware(
 
 
 class VoicePipeline:
-    def __init__(self, job_description):
+    def __init__(self, job_description: str, duration: int, time_left: int):
         # Keeps track of whether this specific session has triggered the agent yet.
         # This prevents global state mutations that affect concurrent users.
         self.has_triggered = False
         self.job_description = job_description
+        self.duration = duration
+        self.time_left = time_left
 
     async def _stt_stream(
             self,
@@ -124,7 +126,10 @@ class VoicePipeline:
             if event.type == "stt_output" or event.type == "agent_trigger":
                 buffer = []
                 stream = agent.astream(
-                    {"messages": [HumanMessage(content=event.text)], "job_description": self.job_description},
+                    {"messages": [HumanMessage(content=event.text)],
+                     "job_description": self.job_description,
+                     "duration": self.duration,
+                     "time_left": self.time_left},
                     {"configurable": {"thread_id": thread_id}},
                     stream_mode="messages",
                     flush=True
@@ -211,7 +216,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 break
 
     data = await websocket.receive_json()
-    voice_pipeline = VoicePipeline(data.get("job_description", ""))
+    voice_pipeline = VoicePipeline(data.get("job_description", ""), data.get("duration", 0), data.get("time_left", 0))
     output_stream = voice_pipeline.get_runnable().atransform(websocket_audio_stream())
 
     try:

@@ -36,8 +36,8 @@
                         </h2>
                     </div>
                     <Controls
-                        onStart={() => voiceSession.start()}
-                        onStop={() => voiceSession.stop()}
+                        onStart={(duration: number) => { voiceSession.start(duration); }}
+                        onStop={() => { voiceSession.stop(); }}
                     />
                 </div>
 

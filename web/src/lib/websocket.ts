@@ -13,7 +13,7 @@ import { createAudioCapture, createAudioPlayback } from "./audio";
 import { get, type Writable } from "svelte/store";
 
 export interface VoiceSession {
-    start: () => Promise<void>;
+    start: (durationMins?: number) => Promise<void>;
     stop: () => void;
     visualizerStore: Writable<{ ctx: AudioContext | null; node: GainNode | null }>;
 }
@@ -116,7 +116,7 @@ export function createVoiceSession(): VoiceSession {
         currentTurn.finishTurn();
     }
 
-    async function start(): Promise<void> {
+    async function start(durationMins: number = 10): Promise<void> {
 
         session.reset();
         currentTurn.reset();
@@ -143,11 +143,18 @@ export function createVoiceSession(): VoiceSession {
             
             try {
                 const jobDesc = get(jobDescStore);
-                if (jobDesc.description && ws && ws.readyState == WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: "job_desc", job_description: jobDesc }));
+                const duration = get(session);
+
+                if (jobDesc.description && duration.duration && ws && ws.readyState == WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        job_description: jobDesc.description,
+                        duration: duration.duration,
+                        time_left: duration.remainingTime
+                    }));
                 }
 
-                session.connect();
+
+                session.connect(durationMins);
                 logs.log("Session started.");
                 // console.log("WebSocket connected.");
                 try{
