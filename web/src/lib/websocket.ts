@@ -142,19 +142,19 @@ export function createVoiceSession(): VoiceSession {
         ws.onopen = async () => {
             
             try {
+                session.connect(durationMins);
                 const jobDesc = get(jobDescStore);
                 const duration = get(session);
 
-                if (jobDesc.description && duration.duration && ws && ws.readyState == WebSocket.OPEN) {
+                if (ws && ws.readyState == WebSocket.OPEN) {
                     ws.send(JSON.stringify({
-                        job_description: jobDesc.description,
-                        duration: duration.duration,
-                        time_left: duration.remainingTime
+                        type: "init",
+                        job_description: jobDesc.description || "",
+                        duration: duration.duration || 0,
+                        time_left: duration.remainingTime || 0,
                     }));
                 }
 
-
-                session.connect(durationMins);
                 logs.log("Session started.");
                 // console.log("WebSocket connected.");
                 try{
