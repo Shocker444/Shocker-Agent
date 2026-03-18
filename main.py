@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import json
 from pathlib import Path
 from typing import AsyncIterator
 from uuid import uuid4
@@ -134,11 +135,13 @@ class VoicePipeline:
                     stream_mode="messages",
                     flush=True
                 )
+
                 async for message, metadata in stream:
                     # logger.info(f"Agent Message: {message}")
                     try:
                         if isinstance(message, AIMessage):
-                            logger.info(f"Agent Response: {message.content}")
+
+                            logger.info(f"Time left: {self.time_left}")
                             yield AgentChunkEvent(
                                 text=message.content
                             )
@@ -162,7 +165,6 @@ class VoicePipeline:
             try:
                 async for event in event_stream:
                     yield event
-
                     if event.type == "agent_end":
                         await tts.send_text(event.text)
                         await tts.flush()
@@ -205,8 +207,14 @@ async def websocket_endpoint(websocket: WebSocket):
     async def websocket_audio_stream() -> AsyncIterator[bytes]:
         while True:
             try:
-                data = await websocket.receive_bytes()
-                yield data
+                message = await websocket.receive()
+                if "bytes" in message and message["bytes"]:
+                    yield message["bytes"]
+                elif "text" in message and message["text"]:
+                    data = json.loads(message["text"])
+                    if data.get("type") == "time_update":
+                        voice_pipeline.duration = data.get("duration", voice_pipeline.duration)
+                        voice_pipeline.time_left = data.get("time_left", voice_pipeline.time_left)
             except WebSocketDisconnect:
                 # This is expected! It means the user clicked "End Session"
                 logger.info("Client disconnected gracefully")

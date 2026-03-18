@@ -1,5 +1,7 @@
 <script lang="ts">
   import { session, formattedTime } from "../stores";
+
+  console.log(formattedTime);
 </script>
 
 <header class="flex items-center justify-between">

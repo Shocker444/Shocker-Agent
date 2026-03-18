@@ -21,7 +21,7 @@ export interface VoiceSession {
 export function createVoiceSession(): VoiceSession {
     let ws: WebSocket | null = null;
     let ttsFinishTimeout: ReturnType<typeof setTimeout> | null = null;
-
+    let sessionUnsubscribe: (() => void) | null = null;
 
     const audioCapture = createAudioCapture()
     const audioPlayback = createAudioPlayback()
@@ -48,7 +48,7 @@ export function createVoiceSession(): VoiceSession {
                 currentTurn.sttEnd(event.timestamp, event.text);
                 activities.add("stt", "Transcription", event.text);
                 break;
-            
+
             case "agent_trigger":
                 currentTurn.agentTrigger(event.timestamp);
                 break;
@@ -140,24 +140,37 @@ export function createVoiceSession(): VoiceSession {
         console.log(ws.binaryType)
 
         ws.onopen = async () => {
-            
+
             try {
                 session.connect(durationMins);
                 const jobDesc = get(jobDescStore);
-                const duration = get(session);
-
-                if (ws && ws.readyState == WebSocket.OPEN) {
+                const currentSession = get(session);
+                
+                if (jobDesc.description && ws && ws.readyState == WebSocket.OPEN) {
                     ws.send(JSON.stringify({
                         type: "init",
                         job_description: jobDesc.description || "",
-                        duration: duration.duration || 0,
-                        time_left: duration.remainingTime || 0,
+                        duration: currentSession.duration || 0,
+                        time_left: currentSession.remainingTime || 0,
                     }));
                 }
 
+                // Subscribe to session updates to send reactive time to the backend
+                let lastRemaining = currentSession.remainingTime;
+                sessionUnsubscribe = session.subscribe(($s) => {
+                    if (ws && ws.readyState === WebSocket.OPEN && lastRemaining !== $s.remainingTime) {
+                        lastRemaining = $s.remainingTime;
+                        ws.send(JSON.stringify({
+                            type: "time_update",
+                            duration: $s.duration || 0,
+                            time_left: $s.remainingTime || 0,
+                        }));
+                    }
+                });
+
                 logs.log("Session started.");
                 // console.log("WebSocket connected.");
-                try{
+                try {
                     await audioCapture.start((chunk) => {
                         if (ws && ws.readyState == WebSocket.OPEN) {
                             ws.send(chunk);
@@ -217,6 +230,11 @@ export function createVoiceSession(): VoiceSession {
             ws.close();
             ws = null;
             // console.log("WebSocket closed");
+        }
+
+        if (sessionUnsubscribe) {
+            sessionUnsubscribe();
+            sessionUnsubscribe = null;
         }
 
         session.reset();
