@@ -160,6 +160,12 @@ export function createVoiceSession(): VoiceSession {
                 sessionUnsubscribe = session.subscribe(($s) => {
                     if (ws && ws.readyState === WebSocket.OPEN && lastRemaining !== $s.remainingTime) {
                         lastRemaining = $s.remainingTime;
+                        if ($s.remainingTime !== null && $s.remainingTime <= 0) {
+                            console.log("Time left is 0, stopping session");
+                            stop();
+                            session.setStatus("disconnected");
+                            return;
+                        }
                         ws.send(JSON.stringify({
                             type: "time_update",
                             duration: $s.duration || 0,

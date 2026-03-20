@@ -141,7 +141,6 @@ class VoicePipeline:
                     try:
                         if isinstance(message, AIMessage):
 
-                            logger.info(f"Time left: {self.time_left}")
                             yield AgentChunkEvent(
                                 text=message.content
                             )
@@ -185,6 +184,9 @@ class VoicePipeline:
             except Exception as e:
                 logger.error(f"Error while processing text: {e}")
                 raise
+            finally:
+                await asyncio.sleep(0.2)
+                await tts.close()
 
         
 
@@ -208,9 +210,12 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             try:
                 message = await websocket.receive()
-                if "bytes" in message and message["bytes"]:
+                if message.get("type") == "websocket.disconnect":
+                    logger.info("Client disconnected gracefully")
+                    break
+                if "bytes" in message and message.get("bytes"):
                     yield message["bytes"]
-                elif "text" in message and message["text"]:
+                elif "text" in message and message.get("text"):
                     data = json.loads(message["text"])
                     if data.get("type") == "time_update":
                         voice_pipeline.duration = data.get("duration", voice_pipeline.duration)
@@ -219,11 +224,16 @@ async def websocket_endpoint(websocket: WebSocket):
                 # This is expected! It means the user clicked "End Session"
                 logger.info("Client disconnected gracefully")
                 break  # Break the loop to stop processing
+            except RuntimeError as e:
+                # Catch specific RuntimeErrors, although we've avoided it now
+                logger.error(f"RuntimeError receiving audio: {e}")
+                break
             except Exception as e:
                 logger.error(f"Unexpected error receiving audio: {e}")
                 break
 
     data = await websocket.receive_json()
+    logger.info(f"Received data: {data}")
     voice_pipeline = VoicePipeline(data.get("job_description", ""), data.get("duration", 0), data.get("time_left", 0))
     output_stream = voice_pipeline.get_runnable().atransform(websocket_audio_stream())
 
