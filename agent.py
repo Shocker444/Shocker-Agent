@@ -1,4 +1,4 @@
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, Literal
 from loguru import logger
 from langchain.chat_models import init_chat_model
 from langgraph.graph import add_messages
@@ -10,7 +10,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
 
 from settings import settings
-from prompts import SYSTEM_PROMPT, TEXT_TO_SPEECH_PROMPT
+from prompts import SYSTEM_PROMPT, TECHNICAL_PHASE_PROMPT, CLOSING_PROMPT
 
 
 model = init_chat_model(model=settings.LLM_MODEL_NAME, model_provider="openai", temperature=0, api_key=settings.OPENAI_API_KEY)
@@ -39,10 +39,53 @@ async def call_llm(state: AgentState):
     )
     return {"messages": response.content}
 
+async def technical_phase(state: AgentState):
+    """ Call the LLM with the given messages."""
+
+    response = await model.ainvoke(
+        [
+            SystemMessage(content=TECHNICAL_PHASE_PROMPT)
+        ]
+        + state["messages"]
+    )
+    return {"messages": response.content}   
+
+async def end_session(state: AgentState):
+
+    """ Bring the session to a close when the time is almost up"""
+
+    response = await model.ainvoke(
+        [
+            SystemMessage(
+                content=CLOSING_PROMPT.format(TIME_LEFT = state["time_left"])
+            )
+        ]
+        + state["messages"]
+    )
+    return {"messages": response.content}
+
+async def check_time(state: AgentState) -> Literal["end_session", "call_llm"]:
+    """ Check if the time is almost up"""
+    if state["time_left"] <= 60:
+        return "end_session"
+    else:
+        return "call_llm"
+
 
 graph_builder = StateGraph(AgentState)
 graph_builder.add_node("call_llm", call_llm)
+graph_builder.add_node("technical_phase", technical_phase)
+graph_builder.add_node("end_session", end_session)
+
 graph_builder.add_edge(START, "call_llm")
-graph_builder.add_edge("call_llm", END)
+graph_builder.add_conditional_edges(
+    "call_llm",
+    check_time,
+    {"technical_phase": "technical_phase",
+     "end_session": "end_session"}
+)
+
+graph_builder.add_edge("technical_phase", "call_llm")
+graph_builder.add_edge("end_session", END)
 
 agent = graph_builder.compile(checkpointer=InMemorySaver())
