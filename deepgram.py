@@ -73,6 +73,7 @@ class DeepgramSTT:
                                 pass
                                 
                             elif message_type == "Results":
+                                logger.info(f"Deepgram STT: {message}")
                                 transcript = message.get('channel', 0).get('alternatives', [{}])[0].get('transcript', '')
                                 turn_is_formatted = message.get("speech_final", False)
                                 is_final = message.get("is_final", False)
@@ -86,11 +87,12 @@ class DeepgramSTT:
                                         yield STTOutputEvent(text=transcript)
                                     else:
                                         pass    
-                                elif is_final:
-                                    if transcript:
-                                        textchunk_buffer.append(transcript)
-                                else:
+                                elif is_final and transcript:
+                                    textchunk_buffer.append(transcript)
+                                elif transcript:
                                     yield STTChunkEvent(text=transcript)
+                                else:
+                                    pass
 
                             elif message_type == "Metadata":
                                 pass

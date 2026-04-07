@@ -136,6 +136,7 @@ class VoicePipeline:
                     flush=True
                 )
 
+
                 async for message, metadata in stream:
                     # logger.info(f"Agent Message: {message}")
                     try:

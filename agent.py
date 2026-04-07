@@ -64,28 +64,31 @@ async def end_session(state: AgentState):
     )
     return {"messages": response.content}
 
-async def check_time(state: AgentState) -> Literal["end_session", "call_llm"]:
+async def check_time(state: AgentState) -> Literal["end_session", "technical_phase"]:
     """ Check if the time is almost up"""
     if state["time_left"] <= 60:
         return "end_session"
+    elif 60 < state["time_left"] <= 0.9 * state['duration']:
+        return "technical_phase"
     else:
         return "call_llm"
-
 
 graph_builder = StateGraph(AgentState)
 graph_builder.add_node("call_llm", call_llm)
 graph_builder.add_node("technical_phase", technical_phase)
 graph_builder.add_node("end_session", end_session)
 
-graph_builder.add_edge(START, "call_llm")
+
 graph_builder.add_conditional_edges(
-    "call_llm",
+    START,
     check_time,
-    {"technical_phase": "technical_phase",
+    {"call_llm": "call_llm",
+     "technical_phase": "technical_phase",
      "end_session": "end_session"}
 )
 
-graph_builder.add_edge("technical_phase", "call_llm")
+graph_builder.add_edge("call_llm", END)
+graph_builder.add_edge("technical_phase", END)
 graph_builder.add_edge("end_session", END)
 
 agent = graph_builder.compile(checkpointer=InMemorySaver())
