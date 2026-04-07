@@ -4,6 +4,7 @@
   let errorMsg = $state("");
   let durationValue = $state(10);
   let durationError = $state("");
+  let showConfirmModel = $state(false);
 
   function handleJdChange(e: Event) {
     const target = e.target as HTMLTextAreaElement;
@@ -33,6 +34,29 @@
     errorMsg = "";
     onStart(durationValue);
   }
+
+  function handleConfirm() {
+    if ($session.remainingTime && $session.remainingTime > 0) {
+      showConfirmModel = true;
+    }
+
+    else {
+      onStop();
+    }
+  }
+
+  // Reference to the native HTML element
+  let dialogRef = $state<HTMLDialogElement>();
+
+  // This effect watches the state and tells the browser to 
+  // move the element into the "Top Layer" via showModal()
+  $effect(() => {
+    if (showConfirmModel) {
+      dialogRef?.showModal();
+    } else {
+      dialogRef?.close();
+    }
+  });
 
   const statusConfig = {
     ready: {
@@ -108,7 +132,7 @@
     {/if}
   </div>
 
-
+  <!-- Buttons -->
   <div class="flex gap-3">
     <button
       onclick={handleInitialize}
@@ -134,7 +158,7 @@
     </button>
 
     <button
-      onclick={onStop}
+      onclick={handleConfirm}
       disabled={!$session.connected}
       class="flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider bg-zinc-800 text-zinc-400 rounded-lg
              border border-zinc-700 transition-all duration-150
@@ -143,6 +167,7 @@
     >
       Terminate
     </button>
+
   </div>
 
   <!-- Status Row -->
@@ -164,3 +189,36 @@
     </div>
   {/if}
 </div>
+
+<dialog 
+  bind:this={dialogRef} 
+  onclose={() => (showConfirmModel = false)}
+  class="modal-box"
+>
+  <div class="modal-content">
+    <h3>End Session Early?</h3>
+    <p>You still have time remaining. Are you sure you want to end the session?</p>
+    
+    <div class="modal-actions">
+      <button 
+        type="button" 
+        class="btn-secondary"
+        onclick={() => (showConfirmModel = false)}
+      >
+        Keep Going
+      </button>
+      
+      <button 
+        type="button" 
+        class="btn-primary"
+        onclick={() => { 
+          showConfirmModel = false; 
+          onStop(); 
+        }}
+      >
+        Yes, End Session
+      </button>
+    </div>
+  </div>
+</dialog>
+
