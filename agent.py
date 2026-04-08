@@ -44,7 +44,10 @@ async def technical_phase(state: AgentState):
 
     response = await model.ainvoke(
         [
-            SystemMessage(content=TECHNICAL_PHASE_PROMPT)
+            SystemMessage(content=TECHNICAL_PHASE_PROMPT.format(JOB_DESCRIPTION=state["job_description"],
+                                             RESUME_DATA="N/A",
+                                             DURATION = state["duration"],
+                                             TIME_LEFT = state["time_left"]))
         ]
         + state["messages"]
     )
@@ -57,14 +60,17 @@ async def end_session(state: AgentState):
     response = await model.ainvoke(
         [
             SystemMessage(
-                content=CLOSING_PROMPT.format(TIME_LEFT = state["time_left"])
+                content=CLOSING_PROMPT.format(JOB_DESCRIPTION=state["job_description"],
+                                             RESUME_DATA="N/A",
+                                             DURATION = state["duration"],
+                                             TIME_LEFT = state["time_left"])
             )
         ]
         + state["messages"]
     )
     return {"messages": response.content}
 
-async def check_time(state: AgentState) -> Literal["end_session", "technical_phase"]:
+async def check_time(state: AgentState) -> Literal["end_session", "technical_phase", "call_llm"]:
     """ Check if the time is almost up"""
     if state["time_left"] <= 60:
         return "end_session"
