@@ -5,7 +5,6 @@ import base64
 import os
 import tempfile
 import io
-#from pypdf import PdfReader
 from langchain_community.document_loaders import PyMuPDFLoader
 from pathlib import Path
 from typing import AsyncIterator
@@ -16,14 +15,12 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.staticfiles import StaticFiles
 from langchain.agents import create_agent
 from langchain.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableGenerator
 from langgraph.checkpoint.memory import InMemorySaver
 from agent import agent
 from utils import merge_async_iters
-#from misc.sample_jd import Job_description
 from settings import settings
 
 
