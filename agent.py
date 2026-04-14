@@ -19,6 +19,7 @@ model = init_chat_model(model=settings.LLM_MODEL_NAME, model_provider="openai", 
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     job_description: str
+    resume: str
     duration: int
     time_left: int
 
@@ -30,7 +31,7 @@ async def call_llm(state: AgentState):
         [
             SystemMessage(
                 content=SYSTEM_PROMPT.format(JOB_DESCRIPTION=state["job_description"],
-                                             RESUME_DATA="N/A",
+                                             RESUME_DATA=state.get("resume", "N/A"),
                                              DURATION = state["duration"],
                                              TIME_LEFT = state["time_left"])
             )
@@ -45,7 +46,7 @@ async def technical_phase(state: AgentState):
     response = await model.ainvoke(
         [
             SystemMessage(content=TECHNICAL_PHASE_PROMPT.format(JOB_DESCRIPTION=state["job_description"],
-                                             RESUME_DATA="N/A",
+                                             RESUME_DATA=state.get("resume", "N/A"),
                                              DURATION = state["duration"],
                                              TIME_LEFT = state["time_left"]))
         ]
@@ -61,7 +62,7 @@ async def end_session(state: AgentState):
         [
             SystemMessage(
                 content=CLOSING_PROMPT.format(JOB_DESCRIPTION=state["job_description"],
-                                             RESUME_DATA="N/A",
+                                             RESUME_DATA=state.get("resume", "N/A"),
                                              DURATION = state["duration"],
                                              TIME_LEFT = state["time_left"])
             )

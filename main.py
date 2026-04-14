@@ -1,6 +1,12 @@
 import asyncio
 import contextlib
 import json
+import base64
+import os
+import tempfile
+import io
+#from pypdf import PdfReader
+from langchain_community.document_loaders import PyMuPDFLoader
 from pathlib import Path
 from typing import AsyncIterator
 from uuid import uuid4
@@ -54,11 +60,12 @@ app.add_middleware(
 
 
 class VoicePipeline:
-    def __init__(self, job_description: str, duration: int, time_left: int):
+    def __init__(self, job_description: str, resume: str, duration: int, time_left: int):
         # Keeps track of whether this specific session has triggered the agent yet.
         # This prevents global state mutations that affect concurrent users.
         self.has_triggered = False
         self.job_description = job_description
+        self.resume = resume
         self.duration = duration
         self.time_left = time_left
 
@@ -129,6 +136,7 @@ class VoicePipeline:
                 stream = agent.astream(
                     {"messages": [HumanMessage(content=event.text)],
                      "job_description": self.job_description,
+                     "resume": self.resume,
                      "duration": self.duration,
                      "time_left": self.time_left},
                     {"configurable": {"thread_id": thread_id}},
@@ -234,8 +242,40 @@ async def websocket_endpoint(websocket: WebSocket):
                 break
 
     data = await websocket.receive_json()
-    logger.info(f"Received data: {data}")
-    voice_pipeline = VoicePipeline(data.get("job_description", ""), data.get("duration", 0), data.get("time_left", 0))
+    logger.info(f"Received data keys: {list(data.keys())}")
+    
+    resume_text = "N/A"
+    
+    try:
+        if "resume_base64" in data and data["resume_base64"]:
+            pdf_bytes = base64.b64decode(data["resume_base64"])
+            
+            # PyMuPDFLoader expects a physical file path, not a streaming byte object.
+            # We save it to a temporary system file, read it, and then delete it.
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                tmp_file.write(pdf_bytes)
+                tmp_file_path = tmp_file.name
+
+            try:
+                loader = PyMuPDFLoader(tmp_file_path)
+                docs = loader.load()
+                resume_text = "\n".join(docs[i].page_content for i in range(len(docs)))
+                logger.info("Successfully extracted resume text securely.")
+            finally:
+                # Always clean up the temporary file
+                os.unlink(tmp_file_path)
+
+    except Exception as e:
+        logger.error(f"Failed to read resume PDF: {e}")
+        resume_text = "N/A"
+
+    voice_pipeline = VoicePipeline(
+        data.get("job_description", ""), 
+        resume=resume_text,
+        duration=data.get("duration", 0), 
+        time_left=data.get("time_left", 0)
+    )
+    
     output_stream = voice_pipeline.get_runnable().atransform(websocket_audio_stream())
 
     try:

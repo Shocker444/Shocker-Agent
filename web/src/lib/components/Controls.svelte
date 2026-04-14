@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { session, jobDescStore } from "../stores";
+  import { session, jobDescStore, resumeStore } from "../stores";
 
   let errorMsg = $state("");
   let durationValue = $state(10);
@@ -11,6 +11,21 @@
     jobDescStore.setJobDesc(target.value);
     if (target.value.trim()) {
       errorMsg = "";
+    }
+  }
+
+  async function handleFileChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resumeStore.setResume(base64String, file.name);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      resumeStore.reset();
     }
   }
 
@@ -132,6 +147,25 @@
     {/if}
   </div>
 
+  
+
+  <!-- Resume File Input -->
+  <div class="flex flex-col gap-2">
+    <label for="resume-input" class="text-[10px] font-mono text-zinc-600 uppercase"
+      >Upload Resume for more personalized responses (Optional/PDF)</label
+    >
+    <div class="flex items-center gap-2">
+      <input
+        type="file"
+        id="resume-input"
+        accept="application/pdf"
+        onchange={handleFileChange}
+        disabled={$session.connected}
+        class="w-full text-xs text-zinc-500 font-mono file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-cyan-400 hover:file:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      />
+    </div>
+  </div>
+
   <!-- Buttons -->
   <div class="flex gap-3">
     <button
@@ -221,4 +255,4 @@
     </div>
   </div>
 </dialog>
-
+

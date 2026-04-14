@@ -7,3 +7,4 @@ export {
 } from "./pipeline";
 export { activities, logs } from "./activity";
 export { jobDescStore } from "./Job_desc";
+export { resumeStore } from "./resume";

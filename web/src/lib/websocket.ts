@@ -6,7 +6,8 @@ import {
     waterfallData,
     activities,
     logs,
-    jobDescStore
+    jobDescStore,
+    resumeStore
 } from "./stores";
 
 import { createAudioCapture, createAudioPlayback } from "./audio";
@@ -147,9 +148,11 @@ export function createVoiceSession(): VoiceSession {
                 const currentSession = get(session);
                 
                 if (jobDesc.description && ws && ws.readyState == WebSocket.OPEN) {
+                    const resume = get(resumeStore);
                     ws.send(JSON.stringify({
                         type: "init",
                         job_description: jobDesc.description || "",
+                        resume_base64: resume.fileBase64 || "",
                         duration: currentSession.duration || 0,
                         time_left: currentSession.remainingTime || 0,
                     }));
