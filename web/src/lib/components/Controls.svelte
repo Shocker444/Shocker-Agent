@@ -20,7 +20,7 @@
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64String = (reader.result as string).split(',')[1];
+        const base64String = (reader.result as string).split(",")[1];
         resumeStore.setResume(base64String, file.name);
       };
       reader.readAsDataURL(file);
@@ -53,9 +53,7 @@
   function handleConfirm() {
     if ($session.remainingTime && $session.remainingTime > 0) {
       showConfirmModel = true;
-    }
-
-    else {
+    } else {
       onStop();
     }
   }
@@ -63,7 +61,7 @@
   // Reference to the native HTML element
   let dialogRef = $state<HTMLDialogElement>();
 
-  // This effect watches the state and tells the browser to 
+  // This effect watches the state and tells the browser to
   // move the element into the "Top Layer" via showModal()
   $effect(() => {
     if (showConfirmModel) {
@@ -109,7 +107,9 @@
 <div class="flex flex-col gap-3">
   <!-- Duration Input -->
   <div class="flex flex-col gap-2">
-    <label for="duration-input" class="text-[10px] font-mono text-white-600 uppercase"
+    <label
+      for="duration-input"
+      class="text-[10px] font-mono text-white-600 uppercase"
       >Session Duration (Minutes)</label
     >
     <input
@@ -147,11 +147,11 @@
     {/if}
   </div>
 
-  
-
   <!-- Resume File Input -->
   <div class="flex flex-col gap-2">
-    <label for="resume-input" class="text-[10px] font-mono text-white-600 uppercase"
+    <label
+      for="resume-input"
+      class="text-[10px] font-mono text-white-600 uppercase"
       >Upload Resume for more personalized responses (Optional/PDF)</label
     >
     <div class="flex items-center gap-2">
@@ -201,7 +201,6 @@
     >
       Terminate
     </button>
-
   </div>
 
   <!-- Status Row -->
@@ -224,30 +223,32 @@
   {/if}
 </div>
 
-<dialog 
-  bind:this={dialogRef} 
+<dialog
+  bind:this={dialogRef}
   onclose={() => (showConfirmModel = false)}
   class="modal-box"
 >
   <div class="modal-content">
     <h3>End Session Early?</h3>
-    <p>You still have time remaining. Are you sure you want to end the session?</p>
-    
+    <p>
+      You still have time remaining. Are you sure you want to end the session?
+    </p>
+
     <div class="modal-actions">
-      <button 
-        type="button" 
+      <button
+        type="button"
         class="btn-secondary"
         onclick={() => (showConfirmModel = false)}
       >
         Keep Going
       </button>
-      
-      <button 
-        type="button" 
+
+      <button
+        type="button"
         class="btn-primary"
-        onclick={() => { 
-          showConfirmModel = false; 
-          onStop(); 
+        onclick={() => {
+          showConfirmModel = false;
+          onStop();
         }}
       >
         Yes, End Session
@@ -255,4 +256,3 @@
     </div>
   </div>
 </dialog>
-

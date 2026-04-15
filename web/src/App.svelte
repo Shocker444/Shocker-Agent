@@ -6,6 +6,7 @@
         Header,
         PipelineCard,
         AudioVisualizer,
+        Feedback,
     } from "./lib/components";
     import { createVoiceSession } from "./lib/websocket";
 
@@ -36,8 +37,12 @@
                         </h2>
                     </div>
                     <Controls
-                        onStart={(duration: number) => { voiceSession.start(duration); }}
-                        onStop={() => { voiceSession.stop(); }}
+                        onStart={(duration: number) => {
+                            voiceSession.start(duration);
+                        }}
+                        onStop={() => {
+                            voiceSession.stop();
+                        }}
                     />
                 </div>
 
@@ -106,6 +111,17 @@
                         </h2>
                     </div>
                     <Console />
+                </div>
+
+                <!-- Feedback Section -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-0.5 h-4 bg-cyan-500 rounded-full"></span>
+                        <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                            Interview Feedback
+                        </h2>
+                    </div>
+                    <Feedback />
                 </div>
             </div>
         </div>

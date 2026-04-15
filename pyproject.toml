@@ -23,6 +23,7 @@ langchain-google-vertexai = "^3.2.2"
 pdfreader = "^0.1.15"
 langchain-community = "^0.4.1"
 pymupdf = "^1.27.2.2"
+pymongo = "^4.16.0"
 
 
 [build-system]

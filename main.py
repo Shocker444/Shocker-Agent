@@ -13,7 +13,9 @@ from loguru import logger
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from pydantic import BaseModel
+from Database.mongo import MongoDBConnector
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.agents import create_agent
 from langchain.messages import AIMessage, HumanMessage, ToolMessage
@@ -49,6 +51,26 @@ app.add_middleware(
 )
 
 
+
+FEEDBACK_FILE = Path(__file__).parent / "feedback.txt"
+
+class FeedbackPayload(BaseModel):
+    name: str = "Anonymous"
+    feedback: str
+
+@app.post("/feedback")
+async def submit_feedback(payload: FeedbackPayload):
+    """Append name + feedback to a backend-only text file."""
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry = f"[{timestamp}] {payload.name}:\n{payload.feedback}\n{'─'*50}\n"
+    try:
+        await MongoDBConnector.save("feedback", payload)
+
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Failed to log feedback: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save feedback.")
 
 class VoicePipeline:
     def __init__(self, job_description: str, resume: str, duration: int, time_left: int):

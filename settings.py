@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = Field(default=None, description="Gemini API key for LLM access")
     LLM_MODEL_NAME: str = Field(default="gpt-4.1", description="LLM model name to use")
 
+    # MongoDB Database
+    DATABASE_HOST: str = Field(default="mongodb://localhost:27017", description="MongoDB connection string")
+    DATABASE_NAME: str = Field(default="InfraDB", description="MongoDB database name")
+    DATABASE_USERNAME: Optional[str] = Field(default=None, description="MongoDB username")
+    DATABASE_PASSWORD: Optional[str] = Field(default=None, description="MongoDB password")
+    DATABASE_AUTH_SOURCE: str = Field(default="admin", description="MongoDB authentication database")
+
     # ELEVENLABS SETTINGS
     ELEVENLABS_API_KEY: Optional[str] = Field(default=None, description="ElevenLabs API key for TTS service")
 
