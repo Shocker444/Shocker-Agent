@@ -109,7 +109,7 @@
 <div class="flex flex-col gap-3">
   <!-- Duration Input -->
   <div class="flex flex-col gap-2">
-    <label for="duration-input" class="text-[10px] font-mono text-zinc-600 uppercase"
+    <label for="duration-input" class="text-[10px] font-mono text-white-600 uppercase"
       >Session Duration (Minutes)</label
     >
     <input
@@ -129,7 +129,7 @@
 
   <!-- Job Description Input -->
   <div class="flex flex-col gap-2">
-    <label for="jd-input" class="text-[10px] font-mono text-zinc-600 uppercase"
+    <label for="jd-input" class="text-[10px] font-mono text-white-600 uppercase"
       >Target Job Description</label
     >
     <textarea
@@ -151,7 +151,7 @@
 
   <!-- Resume File Input -->
   <div class="flex flex-col gap-2">
-    <label for="resume-input" class="text-[10px] font-mono text-zinc-600 uppercase"
+    <label for="resume-input" class="text-[10px] font-mono text-white-600 uppercase"
       >Upload Resume for more personalized responses (Optional/PDF)</label
     >
     <div class="flex items-center gap-2">

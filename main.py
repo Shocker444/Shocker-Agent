@@ -37,13 +37,7 @@ from events import (
     InterruptEvent,
     event_to_dict,
     )
-
-
-'''STATIC_DIR = Path(__file__).parent/"web"/"dist"
-
-if not STATIC_DIR.exists():
-    raise RuntimeError("Static directory not found. Please build the web frontend before running the server.")'''
-
+    
 app = FastAPI()
 
 app.add_middleware(
