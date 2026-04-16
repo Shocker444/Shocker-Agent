@@ -167,7 +167,7 @@
   </div>
 
   <!-- Buttons -->
-  <div class="flex gap-3">
+  <div class="flex flex-col sm:flex-row gap-3">
     <button
       onclick={handleInitialize}
       disabled={$session.connected}

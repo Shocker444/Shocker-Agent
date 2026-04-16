@@ -25,7 +25,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             <!-- LEFT COLUMN: CONTROLS & VISUALS (4 cols) -->
-            <div class="lg:col-span-4 flex flex-col gap-5 sticky top-5">
+            <div class="lg:col-span-4 flex flex-col gap-5 lg:sticky lg:top-5 relative">
                 <!-- Control Panel -->
                 <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                     <div class="flex items-center gap-2 mb-5">

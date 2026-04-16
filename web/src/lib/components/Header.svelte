@@ -30,8 +30,8 @@
   </div>
 
   <!-- Status -->
-  <div class="hidden md:flex items-center gap-6">
-    <div class="flex flex-col items-end">
+  <div class="flex items-center gap-4 md:gap-6">
+    <div class="hidden sm:flex flex-col items-end">
       <span class="font-mono text-xs text-zinc-400 font-bold"
         >{$formattedTime}</span
       >
