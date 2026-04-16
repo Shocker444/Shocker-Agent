@@ -190,15 +190,13 @@ class VoicePipeline:
                         await tts.send_text(event.text)
                         await tts.flush()
 
-                    elif event.type == "stt_output":
+                    elif event.type == "interrupt":
                         # BARGE-IN: User is speaking, so we shut up.
                         # 1. Tell Deepgram to stop producing audio.
                         
                         # 2. Throw away any text we were about to speak.
                         if not settings.AGENT_TRIGGER or self.has_triggered:
                             await tts.clear()
-
-                            yield InterruptEvent()
 
                     else:
                         pass

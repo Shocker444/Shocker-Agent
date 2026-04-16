@@ -21,7 +21,7 @@ import websockets
 from websockets.client import WebSocketClientProtocol
 from settings import settings
 
-from events import STTChunkEvent, STTEvent, STTOutputEvent, TTSChunkEvent
+from events import STTChunkEvent, STTEvent, STTOutputEvent, TTSChunkEvent, InterruptEvent
 
 
 class DeepgramSTT:
@@ -66,31 +66,22 @@ class DeepgramSTT:
                     async for raw_message in self._ws:
                         try:
                             message = json.loads(raw_message)
-
                             message_type = message.get('type')
-                            
-                            if message_type == "Metadata":
-                                pass
                                 
-                            elif message_type == "Results":
-                                logger.info(f"Deepgram STT: {message}")
-                                transcript = message.get('channel', 0).get('alternatives', [{}])[0].get('transcript', '')
-                                turn_is_formatted = message.get("speech_final", False)
-                                is_final = message.get("is_final", False)
+                            if message_type == "TurnInfo":
+                                transcript = message.get("transcript", "")
+                                turn = message.get("event", "")
 
-                                if turn_is_formatted:
-                                    if textchunk_buffer:
-                                        full_sentence = "  ".join(textchunk_buffer) + transcript
-                                        textchunk_buffer = []
-                                        yield STTOutputEvent(text=full_sentence)
-                                    elif transcript:
-                                        yield STTOutputEvent(text=transcript)
-                                    else:
-                                        pass    
-                                elif is_final and transcript:
-                                    textchunk_buffer.append(transcript)
-                                elif transcript:
+                                if turn == "StartOfTurn":
+                                    yield InterruptEvent()
+
+                                if turn == "EndOfTurn" and transcript:
+                                    logger.info(f"Deepgram STT: Final Message: {message}")
+                                    yield STTOutputEvent(text=transcript)
+
+                                elif turn == "update" and transcript:
                                     yield STTChunkEvent(text=transcript)
+
                                 else:
                                     pass
 
@@ -128,20 +119,12 @@ class DeepgramSTT:
 
         # Create a new connection
         params = {
-            "model": "nova-2",            # The model to use (nova-2 is fastest/best)
-            "language": "en-US",          # Language code
+            "model": "flux-general-en",            # The model to use (nova-2 is fastest/best)
             "encoding": "linear16",       # CRITICAL: Tells Deepgram this is raw 16-bit PCM
-            "channels": 1,                # CRITICAL: Mono audio
-            "sample_rate": self.sample_rate, # Must match your frontend (e.g., 16000)
-            
-            # Formatting options
-            "smart_format": "true",       # Adds punctuation and capitalization
-            "format_turns": str(self.format_turns).lower(),
-            "endpointing": "150",
-            "interim_results": "true",  
-              # Set to "false" if you only want final sentences
+            "sample_rate": self.sample_rate,
+            "eot_threshold": 0.9 # Must match your frontend (e.g., 16000)
         }
-        url = f"wss://api.deepgram.com/v1/listen?{urlencode(params)}"
+        url = f"wss://api.deepgram.com/v2/listen?{urlencode(params)}"
         headers = {"Authorization": f"Token {self.api_key}"}
 
         logger.info(f"Deepgram STT: Connecting to {url}")
