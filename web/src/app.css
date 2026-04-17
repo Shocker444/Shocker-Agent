@@ -33,7 +33,7 @@ dialog {
   background: #18181b;
   color: #e4e4e7;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  margin: auto; 
+  margin: auto;
 }
 
 dialog[open] {
@@ -41,8 +41,13 @@ dialog[open] {
 }
 
 @keyframes backdrop-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-fade-in {
@@ -50,6 +55,7 @@ dialog[open] {
     opacity: 0;
     transform: translateY(10px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -99,23 +105,23 @@ dialog[open] {
   transform: translateY(1px) scale(0.97);
 }
 
-.btn-primary { 
-  background: #ef4444; 
-  color: white; 
+.btn-primary {
+  background: #ef4444;
+  color: white;
 }
 
-.btn-primary:hover { 
+.btn-primary:hover {
   background: #dc2626;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 
-.btn-secondary { 
-  background: #27272a; 
-  color: #e4e4e7; 
+.btn-secondary {
+  background: #27272a;
+  color: #e4e4e7;
   border: 1px solid #3f3f46 !important;
 }
 
-.btn-secondary:hover { 
+.btn-secondary:hover {
   background: #3f3f46;
   color: white;
 }

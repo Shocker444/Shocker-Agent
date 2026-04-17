@@ -4,7 +4,6 @@
         Console,
         ActivityFeed,
         Header,
-        PipelineCard,
         AudioVisualizer,
         Feedback,
     } from "./lib/components";
@@ -25,7 +24,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             <!-- LEFT COLUMN: CONTROLS & VISUALS (4 cols) -->
-            <div class="lg:col-span-4 flex flex-col gap-5 lg:sticky lg:top-5 relative">
+            <div
+                class="lg:col-span-4 flex flex-col gap-5 lg:sticky lg:top-5 relative"
+            >
                 <!-- Control Panel -->
                 <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                     <div class="flex items-center gap-2 mb-5">
@@ -54,19 +55,6 @@
                         audioContext={$visualizerState.ctx}
                         sourceNode={$visualizerState.node}
                     />
-                </div>
-
-                <!-- Pipeline Telemetry -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="w-0.5 h-4 bg-zinc-600 rounded-full"></span>
-                        <h2
-                            class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest"
-                        >
-                            Pipeline Telemetry
-                        </h2>
-                    </div>
-                    <PipelineCard />
                 </div>
             </div>
 
@@ -117,7 +105,9 @@
                 <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-0.5 h-4 bg-cyan-500 rounded-full"></span>
-                        <h2 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        <h2
+                            class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest"
+                        >
                             Interview Feedback
                         </h2>
                     </div>
