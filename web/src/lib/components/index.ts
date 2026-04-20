@@ -4,4 +4,4 @@ export { default as PipelineCard } from "./PipelineCard.svelte";
 export { default as ActivityFeed } from "./ActivityFeed.svelte";
 export { default as Console } from "./Console.svelte";
 export { default as AudioVisualizer } from "./AudioVisualizer.svelte";
-export { default as Feedback } from "./Feedback.svelte";
+export { default as Feedback } from "./Feedback.svelte";
