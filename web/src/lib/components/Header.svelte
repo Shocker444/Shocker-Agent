@@ -37,7 +37,7 @@
         <span
           class="text-[10px] font-mono font-normal text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700"
         >
-          AGENT.v2
+          AGENT.v1.1
         </span>
       </h1>
       <p class="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">
@@ -120,11 +120,9 @@
         </h4>
         <ul class="space-y-3 text-sm text-zinc-400 list-disc list-outside ml-6 marker:text-cyan-500">
           <li><strong class="text-zinc-300">Resume Integration:</strong> Added resume upload functionality and integrated resume-based personalization into the interview prompt.</li>
-          <li><strong class="text-zinc-300">Voice Session Management:</strong> Implemented WebSocket-based voice sessions handling audio capture, playback, and server events.</li>
-          <li><strong class="text-zinc-300">Interactive Sessions:</strong> Added interactive voice sessions with dynamic job description inputs.</li>
-          <li><strong class="text-zinc-300">Multi-Phase Workflow:</strong> Implemented a multi-phase agent workflow (including technical and closing phases) with time-based transitions.</li>
-          <li><strong class="text-zinc-300">Svelte Web UI:</strong> Implemented a new Svelte web UI and integrated time management parameters into the agent's pipeline.</li>
-          <li><strong class="text-zinc-300">Feedback & Controls:</strong> Added a new feedback section and a session termination pop-up.</li>
+          <li><strong class="text-zinc-300">Interactive Sessions:</strong> New interactive voice sessions with dynamic job description inputs.</li>
+          <li><strong class="text-zinc-300">Svelte Web UI:</strong> New Svelte web UI and integrated time management parameters into the agent's pipeline.</li>
+          <li><strong class="text-zinc-300">Feedback & Controls:</strong> New feedback section for honest user feedback and a session termination pop-up.</li>
         </ul>
       </section>
 
@@ -134,11 +132,10 @@
           Improvements (Refinements & Enhancements)
         </h4>
         <ul class="space-y-3 text-sm text-zinc-400 list-disc list-outside ml-6 marker:text-amber-500">
-          <li><strong class="text-zinc-300">Conversational Flow:</strong> Improved overall conversation output and turn-taking (using flux), and optimized endpointing values for more natural pauses.</li>
-          <li><strong class="text-zinc-300">Agent Logic & Prompting:</strong> Refined technical interview prompts, updated assessment criteria to handle unsatisfactory answers, and restructured agent state machine transitions.</li>
+          <li><strong class="text-zinc-300">Conversational Flow:</strong> Overall conversation output and turn-taking (using flux) much more optimized and suited for more natural pauses.</li>
+          <li><strong class="text-zinc-300">Agent Logic & Prompting:</strong> Improved agent response and context awareness.</li>
           <li><strong class="text-zinc-300">Speech-to-Text:</strong> Updated and improved STT (Speech-to-Text) handling.</li>
           <li><strong class="text-zinc-300">UI/UX:</strong> Updated the user interface and improved effective transitions between states.</li>
-          <li><strong class="text-zinc-300">Privacy/Cleanup:</strong> Removed pipeline telemetry for users.</li>
         </ul>
       </section>
 
@@ -149,9 +146,8 @@
         </h4>
         <ul class="space-y-3 text-sm text-zinc-400 list-disc list-outside ml-6 marker:text-emerald-500">
           <li><strong class="text-zinc-300">Time Management:</strong> Synchronized frontend and backend session timers to fix time management issues.</li>
-          <li><strong class="text-zinc-300">Prompting:</strong> Fixed missing/incorrect prompt tags.</li>
+          <li><strong class="text-zinc-300">Prompt injection:</strong> Fixed user prompt injection. Agent has full control of the conversation.</li>
           <li><strong class="text-zinc-300">Responsiveness:</strong> Improved overall system and UI responsiveness.</li>
-          <li><strong class="text-zinc-300">General Maintenance:</strong> Removed stray comments and resolved Issue #6.</li>
         </ul>
       </section>
 
